@@ -1,0 +1,11 @@
+Using device: cuda:1
+Traceback (most recent call last):
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/mlp.py", line 12, in <module>
+    print("Device name:", torch.cuda.get_device_name(device))
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/cuda/__init__.py", line 423, in get_device_name
+    return get_device_properties(device).name
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/cuda/__init__.py", line 456, in get_device_properties
+    raise AssertionError("Invalid device id")
+AssertionError: Invalid device id

@@ -1,0 +1,213 @@
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/utils/data/dataloader.py:558: UserWarning: This DataLoader will create 4 worker processes in total. Our suggested max number of worker in current system is 2, which is smaller than what this DataLoader is going to create. Please be aware that excessive worker creation might get DataLoader running slow or even freeze, lower the worker number to avoid potential slowness/freeze if necessary.
+  warnings.warn(_create_warning_msg(
+Found results directory: /mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/vit_test_results_20241218_122426
+Using checkpoint: /mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/vit_test_results_20241218_122426/checkpoint_epoch_9.pth
+Loaded pretrained weights with message: _IncompatibleKeys(missing_keys=['patch_norm.weight', 'patch_norm.bias', 'year_embedding.weight', 'year_proj.weight', 'year_proj.bias', 'regression_head.0.weight', 'regression_head.0.bias', 'regression_head.1.weight', 'regression_head.1.bias', 'regression_head.4.weight', 'regression_head.4.bias', 'regression_head.7.weight', 'regression_head.7.bias'], unexpected_keys=[])
+
+Creating training dataloaders...
+
+Initializing Training Dataset:
+Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/training_subset_normalized/monthly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/training_subset_gt
+
+First few unique IDs:
+- 2753185_2015-07
+- 2753185_2015-08
+- 2753185_2015-09
+- 2753185_2015-10
+- 2753185_2015-11
+Found 11340 unique location-time pairs for monthly training data
+
+Initializing Training Dataset:
+Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/training_subset_normalized/yearly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/training_subset_gt
+
+First few unique IDs:
+- 2753185_2015
+- 2753185_2016
+- 2753185_2017
+- 2753185_2018
+- 2753198_2015
+Found 1080 unique location-time pairs for yearly training data
+Evaluating model...
+Evaluating:   0%|          | 0/34 [00:00<?, ?it/s]Evaluating:   3%|▎         | 1/34 [00:14<07:45, 14.11s/it]Evaluating:  12%|█▏        | 4/34 [00:14<01:21,  2.70s/it]Evaluating:  21%|██        | 7/34 [00:22<01:12,  2.67s/it]Evaluating:  26%|██▋       | 9/34 [00:30<01:17,  3.09s/it]Evaluating:  29%|██▉       | 10/34 [00:30<01:00,  2.53s/it]Evaluating:  35%|███▌      | 12/34 [00:31<00:40,  1.84s/it]Evaluating:  38%|███▊      | 13/34 [00:38<00:58,  2.81s/it]Evaluating:  41%|████      | 14/34 [00:38<00:44,  2.24s/it]Evaluating:  44%|████▍     | 15/34 [00:38<00:34,  1.83s/it]Evaluating:  47%|████▋     | 16/34 [00:41<00:36,  2.01s/it]Evaluating:  50%|█████     | 17/34 [00:46<00:47,  2.77s/it]Evaluating:  53%|█████▎    | 18/34 [00:47<00:37,  2.33s/it]Evaluating:  56%|█████▌    | 19/34 [00:48<00:30,  2.00s/it]Evaluating:  59%|█████▉    | 20/34 [00:49<00:23,  1.65s/it]Evaluating:  62%|██████▏   | 21/34 [00:53<00:31,  2.41s/it]Evaluating:  65%|██████▍   | 22/34 [00:54<00:24,  2.05s/it]Evaluating:  68%|██████▊   | 23/34 [00:56<00:21,  1.95s/it]Evaluating:  71%|███████   | 24/34 [00:58<00:20,  2.04s/it]Evaluating:  74%|███████▎  | 25/34 [01:01<00:19,  2.16s/it]Evaluating:  76%|███████▋  | 26/34 [01:03<00:16,  2.09s/it]Evaluating:  79%|███████▉  | 27/34 [01:03<00:11,  1.59s/it]Evaluating:  82%|████████▏ | 28/34 [01:07<00:12,  2.15s/it]Evaluating:  85%|████████▌ | 29/34 [01:10<00:13,  2.62s/it]Evaluating:  88%|████████▊ | 30/34 [01:11<00:08,  2.05s/it]Evaluating:  91%|█████████ | 31/34 [01:11<00:04,  1.56s/it]Evaluating:  94%|█████████▍| 32/34 [01:16<00:04,  2.37s/it]Evaluating:  97%|█████████▋| 33/34 [01:19<00:02,  2.66s/it]Evaluating: 100%|██████████| 34/34 [01:19<00:00,  2.34s/it]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/utils/data/dataloader.py:558: UserWarning: This DataLoader will create 4 worker processes in total. Our suggested max number of worker in current system is 2, which is smaller than what this DataLoader is going to create. Please be aware that excessive worker creation might get DataLoader running slow or even freeze, lower the worker number to avoid potential slowness/freeze if necessary.
+  warnings.warn(_create_warning_msg(
+
+Average Loss: 0.0923
+/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/vit3_predict.py:192: RuntimeWarning: invalid value encountered in divide
+  rgb_sentinel[t, :, :, c] = np.clip((channel - min_val) / (max_val - min_val), 0, 1)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2897: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[:, None]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2898: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[None, :]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2897: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[:, None]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2898: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[None, :]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2897: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[:, None]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2898: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[None, :]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2897: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[:, None]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2898: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[None, :]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2897: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[:, None]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2898: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[None, :]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2897: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[:, None]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2898: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[None, :]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2897: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[:, None]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2898: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[None, :]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2897: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[:, None]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2898: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[None, :]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2897: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[:, None]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2898: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[None, :]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2897: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[:, None]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2898: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[None, :]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2897: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[:, None]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2898: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[None, :]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2897: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[:, None]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2898: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[None, :]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2897: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[:, None]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2898: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[None, :]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2897: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[:, None]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2898: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[None, :]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2897: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[:, None]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2898: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[None, :]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/matplotlib/cm.py:489: RuntimeWarning: invalid value encountered in cast
+  xx = (xx * 255).astype(np.uint8)
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2897: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[:, None]
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/numpy/lib/function_base.py:2898: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[None, :]
+
+Generating detailed comparison plots...
+
+Timestep 0:
+Average R²: -0.0506
+Average RMSE: 0.2770
+Average MAE: 0.2068
+
+Timestep 1:
+Average R²: -0.0557
+Average RMSE: 0.2788
+Average MAE: 0.2086
+
+Timestep 2:
+Average R²: -0.0468
+Average RMSE: 0.2768
+Average MAE: 0.2054
+
+Timestep 3:
+Average R²: -0.0484
+Average RMSE: 0.2772
+Average MAE: 0.2060
+
+Generating plots...
+
+Evaluation complete. Plots saved to: /mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/vit_test_results_20241218_122426/evaluation_plots

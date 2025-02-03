@@ -1,0 +1,31 @@
+Device 0: NVIDIA TITAN RTX
+Using device: cuda
+
+Creating training dataloaders...
+
+Initializing Training Dataset:
+Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/training_subset_normalized/monthly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/training_subset_gt
+
+First few unique IDs:
+- 2753185_2015-07
+- 2753185_2015-08
+- 2753185_2015-09
+- 2753185_2015-10
+- 2753185_2015-11
+Found 11340 unique location-time pairs for monthly training data
+
+Initializing Training Dataset:
+Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/training_subset_normalized/yearly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/training_subset_gt
+
+First few unique IDs:
+- 2753185_2015
+- 2753185_2016
+- 2753185_2017
+- 2753185_2018
+- 2753198_2015
+Found 1080 unique location-time pairs for yearly training data
+
+Testing Monthly Data:
+slurmstepd: error: *** JOB 4958 ON grenadilla CANCELLED AT 2025-01-02T15:54:13 ***

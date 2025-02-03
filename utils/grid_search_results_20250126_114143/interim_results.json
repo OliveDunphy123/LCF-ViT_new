@@ -1,0 +1,234 @@
+[
+    {
+        "params": {
+            "learning_rate": 0.0001,
+            "weight_decay": 0.0001,
+            "batch_size": 16,
+            "loss_function": {
+                "name": "mse_l1",
+                "params": {
+                    "mse_weight": 1.0,
+                    "l1_weight": 0.5
+                }
+            },
+            "scheduler_type": "onecycle"
+        },
+        "best_loss": null,
+        "model_path": "vit_test_results_20250126_114220/best_model.pth"
+    },
+    {
+        "params": {
+            "learning_rate": 0.0001,
+            "weight_decay": 0.0001,
+            "batch_size": 16,
+            "loss_function": {
+                "name": "mse_l1",
+                "params": {
+                    "mse_weight": 1.0,
+                    "l1_weight": 0.5
+                }
+            },
+            "scheduler_type": "cosine"
+        },
+        "best_loss": null,
+        "model_path": "vit_test_results_20250126_115401/best_model.pth"
+    },
+    {
+        "params": {
+            "learning_rate": 0.0001,
+            "weight_decay": 0.0001,
+            "batch_size": 16,
+            "loss_function": {
+                "name": "smooth_l1",
+                "params": {
+                    "smooth_weight": 0.1,
+                    "beta": 1.0
+                }
+            },
+            "scheduler_type": "onecycle"
+        },
+        "best_loss": null,
+        "model_path": "vit_test_results_20250126_120446/best_model.pth"
+    },
+    {
+        "params": {
+            "learning_rate": 0.0001,
+            "weight_decay": 0.0001,
+            "batch_size": 16,
+            "loss_function": {
+                "name": "smooth_l1",
+                "params": {
+                    "smooth_weight": 0.1,
+                    "beta": 1.0
+                }
+            },
+            "scheduler_type": "cosine"
+        },
+        "best_loss": null,
+        "model_path": "vit_test_results_20250126_121531/best_model.pth"
+    },
+    {
+        "params": {
+            "learning_rate": 0.0001,
+            "weight_decay": 0.0001,
+            "batch_size": 16,
+            "loss_function": {
+                "name": "mse",
+                "params": {}
+            },
+            "scheduler_type": "onecycle"
+        },
+        "best_loss": null,
+        "model_path": "vit_test_results_20250126_122549/best_model.pth"
+    },
+    {
+        "params": {
+            "learning_rate": 0.0001,
+            "weight_decay": 0.0001,
+            "batch_size": 16,
+            "loss_function": {
+                "name": "mse",
+                "params": {}
+            },
+            "scheduler_type": "cosine"
+        },
+        "best_loss": null,
+        "model_path": "vit_test_results_20250126_123611/best_model.pth"
+    },
+    {
+        "params": {
+            "learning_rate": 0.0001,
+            "weight_decay": 0.0001,
+            "batch_size": 16,
+            "loss_function": {
+                "name": "cross_entropy",
+                "params": {
+                    "num_bins": 20,
+                    "smoothing": 0.1
+                }
+            },
+            "scheduler_type": "onecycle"
+        },
+        "best_loss": null,
+        "model_path": "vit_test_results_20250126_124653/best_model.pth"
+    },
+    {
+        "params": {
+            "learning_rate": 0.0001,
+            "weight_decay": 0.0001,
+            "batch_size": 16,
+            "loss_function": {
+                "name": "cross_entropy",
+                "params": {
+                    "num_bins": 20,
+                    "smoothing": 0.1
+                }
+            },
+            "scheduler_type": "cosine"
+        },
+        "best_loss": null,
+        "model_path": "vit_test_results_20250126_125743/best_model.pth"
+    },
+    {
+        "params": {
+            "learning_rate": 0.0001,
+            "weight_decay": 0.0001,
+            "batch_size": 16,
+            "loss_function": {
+                "name": "huber_focal",
+                "params": {
+                    "beta": 1.0,
+                    "alpha": 2.0,
+                    "gamma": 0.5
+                }
+            },
+            "scheduler_type": "onecycle"
+        },
+        "best_loss": null,
+        "model_path": "vit_test_results_20250126_130754/best_model.pth"
+    },
+    {
+        "params": {
+            "learning_rate": 0.0001,
+            "weight_decay": 0.0001,
+            "batch_size": 16,
+            "loss_function": {
+                "name": "huber_focal",
+                "params": {
+                    "beta": 1.0,
+                    "alpha": 2.0,
+                    "gamma": 0.5
+                }
+            },
+            "scheduler_type": "cosine"
+        },
+        "best_loss": null,
+        "model_path": "vit_test_results_20250126_131917/best_model.pth"
+    },
+    {
+        "params": {
+            "learning_rate": 0.0001,
+            "weight_decay": 0.0001,
+            "batch_size": 16,
+            "loss_function": {
+                "name": "distribution",
+                "params": {
+                    "kl_weight": 0.1
+                }
+            },
+            "scheduler_type": "onecycle"
+        },
+        "best_loss": null,
+        "model_path": "vit_test_results_20250126_132959/best_model.pth"
+    },
+    {
+        "params": {
+            "learning_rate": 0.0001,
+            "weight_decay": 0.0001,
+            "batch_size": 16,
+            "loss_function": {
+                "name": "distribution",
+                "params": {
+                    "kl_weight": 0.1
+                }
+            },
+            "scheduler_type": "cosine"
+        },
+        "best_loss": null,
+        "model_path": "vit_test_results_20250126_134127/best_model.pth"
+    },
+    {
+        "params": {
+            "learning_rate": 0.0001,
+            "weight_decay": 0.0001,
+            "batch_size": 16,
+            "loss_function": {
+                "name": "temporal",
+                "params": {
+                    "smooth_weight": 0.1,
+                    "trend_weight": 0.05
+                }
+            },
+            "scheduler_type": "onecycle"
+        },
+        "best_loss": null,
+        "model_path": "vit_test_results_20250126_135203/best_model.pth"
+    },
+    {
+        "params": {
+            "learning_rate": 0.0001,
+            "weight_decay": 0.0001,
+            "batch_size": 16,
+            "loss_function": {
+                "name": "temporal",
+                "params": {
+                    "smooth_weight": 0.1,
+                    "trend_weight": 0.05
+                }
+            },
+            "scheduler_type": "cosine"
+        },
+        "best_loss": null,
+        "model_path": "vit_test_results_20250126_140318/best_model.pth"
+    }
+]

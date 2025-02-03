@@ -1,0 +1,131 @@
+INFO:numexpr.utils:Note: NumExpr detected 56 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 8.
+INFO:numexpr.utils:NumExpr defaulting to 8 threads.
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/utils/data/dataloader.py:558: UserWarning: This DataLoader will create 4 worker processes in total. Our suggested max number of worker in current system is 2, which is smaller than what this DataLoader is going to create. Please be aware that excessive worker creation might get DataLoader running slow or even freeze, lower the worker number to avoid potential slowness/freeze if necessary.
+  warnings.warn(_create_warning_msg(
+Using device: cuda
+Original patch embedding shape: torch.Size([384, 13, 16, 16])
+Shape after band selection: torch.Size([384, 10, 16, 16])
+Final patch embedding shape: torch.Size([384, 10, 3, 3])
+Original position embedding shape: torch.Size([1, 197, 384])
+Final position embedding shape: torch.Size([1, 26, 384])
+
+Weight Loading Summary:
+Successfully loaded: 148 weights
+Adapted weights: patch_embed.proj.weight, pos_embed
+
+Missing keys:
+  - patch_norm.weight
+  - patch_norm.bias
+  - year_embedding.weight
+  - year_proj.weight
+  - year_proj.bias
+  ... and 14 more
+Loaded pretrained weights with message: _IncompatibleKeys(missing_keys=['patch_norm.weight', 'patch_norm.bias', 'year_embedding.weight', 'year_proj.weight', 'year_proj.bias', 'regression_head.0.weight', 'regression_head.0.bias', 'regression_head.1.weight', 'regression_head.1.bias', 'regression_head.2.weight', 'regression_head.2.bias', 'regression_head.2.running_mean', 'regression_head.2.running_var', 'regression_head.5.weight', 'regression_head.5.bias', 'regression_head.8.weight', 'regression_head.8.bias', 'regression_head.9.weight', 'regression_head.9.bias'], unexpected_keys=[])
+Model created successfully
+
+Creating training dataloaders...
+
+Initializing Training Dataset:
+Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/Sentinel_Normalised/Training/monthly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Training/Stacked
+
+First few unique IDs:
+- 2200820_2015-07
+- 2200820_2015-08
+- 2200820_2015-09
+- 2200820_2015-10
+- 2200820_2015-11
+Found 207858 unique location-time pairs for monthly training data
+
+Initializing Training Dataset:
+Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/Sentinel_Normalised/Training/yearly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Training/Stacked
+
+First few unique IDs:
+- 2200820_2015
+- 2200820_2016
+- 2200820_2017
+- 2200820_2018
+- 2201319_2015
+Found 19840 unique location-time pairs for yearly training data
+Number of training locations: 4216
+Number of validation locations: 744
+Initializing ViTTrainer with parameters:
+scheduler_type: onecycle
+criterion: None
+Initialized trainer. Training results will be saved to: vit_test_results_20250202_004502
+
+Starting training for 50 epochs...
+
+Epoch 1/50
+Epoch 1:   0%|          | 0/527 [00:00<?, ?it/s]Warning: Unexpected shape at /mnt/guanabana/raid/shared/dropbox/QinLennart/Sentinel_Normalised/Training/yearly/2779827/2015_B02.tif: (11, 15)
+Warning: Unexpected shape at /mnt/guanabana/raid/shared/dropbox/QinLennart/Sentinel_Normalised/Training/yearly/2779827/2015_B03.tif: (11, 15)
+Warning: Unexpected shape at /mnt/guanabana/raid/shared/dropbox/QinLennart/Sentinel_Normalised/Training/yearly/2779827/2015_B04.tif: (11, 15)
+Warning: Unexpected shape at /mnt/guanabana/raid/shared/dropbox/QinLennart/Sentinel_Normalised/Training/yearly/2779827/2015_B05.tif: (11, 15)
+Warning: Unexpected shape at /mnt/guanabana/raid/shared/dropbox/QinLennart/Sentinel_Normalised/Training/yearly/2779827/2015_B06.tif: (11, 15)
+Warning: Unexpected shape at /mnt/guanabana/raid/shared/dropbox/QinLennart/Sentinel_Normalised/Training/yearly/2779827/2015_B07.tif: (11, 15)
+Warning: Unexpected shape at /mnt/guanabana/raid/shared/dropbox/QinLennart/Sentinel_Normalised/Training/yearly/2779827/2015_B08.tif: (11, 15)
+Warning: Unexpected shape at /mnt/guanabana/raid/shared/dropbox/QinLennart/Sentinel_Normalised/Training/yearly/2779827/2015_B8A.tif: (11, 15)
+Warning: Unexpected shape at /mnt/guanabana/raid/shared/dropbox/QinLennart/Sentinel_Normalised/Training/yearly/2779827/2015_B11.tif: (11, 15)
+Warning: Unexpected shape at /mnt/guanabana/raid/shared/dropbox/QinLennart/Sentinel_Normalised/Training/yearly/2779827/2015_B12.tif: (11, 15)
+Warning: Unexpected GT shape at /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Training/Stacked/stacked_2779827_fraction_1.tif: (4, 1, 5)
+Warning: Unexpected GT shape at /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Training/Stacked/stacked_2779827_fraction_2.tif: (4, 1, 5)
+Warning: Unexpected GT shape at /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Training/Stacked/stacked_2779827_fraction_3.tif: (4, 1, 5)
+Warning: Unexpected GT shape at /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Training/Stacked/stacked_2779827_fraction_4.tif: (4, 1, 5)
+Warning: Unexpected GT shape at /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Training/Stacked/stacked_2779827_fraction_5.tif: (4, 1, 5)
+Warning: Unexpected GT shape at /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Training/Stacked/stacked_2779827_fraction_6.tif: (4, 1, 5)
+Warning: Unexpected GT shape at /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Training/Stacked/stacked_2779827_fraction_7.tif: (4, 1, 5)
+Error loading ground truth data for time period 2015: No valid ground truth data found for time period 2015
+Error loading data for 2779827_2015: Error loading Ground Truth data: No valid ground truth data found for time period 2015
+Epoch 1:   0%|          | 0/527 [00:18<?, ?it/s]
+Traceback (most recent call last):
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/training/vit3_train.py", line 525, in <module>
+    main()
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/training/vit3_train.py", line 522, in main
+    trainer.train()
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/training/vit3_train.py", line 396, in train
+    train_loss, train_main_loss, train_smooth_loss, train_metrics = self.train_epoch(epoch)
+                                                                    ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/training/vit3_train.py", line 215, in train_epoch
+    predictions = self.model(sentinel_data)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1511, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1520, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/models/vit_model3_yearly_15.py", line 462, in forward
+    tokens = blk(tokens)
+             ^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1511, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1520, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/models/vit_model3_yearly_15.py", line 168, in forward
+    x = x + self.drop_path(self.mlp(self.norm2(x)))
+                           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1511, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1520, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/models/vit_model3_yearly_15.py", line 85, in forward
+    x = self.drop(x) # (n_samples, n_patches + 1, hidden_features)
+        ^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1511, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1520, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/nn/modules/dropout.py", line 59, in forward
+    return F.dropout(input, self.p, self.training, self.inplace)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/nn/functional.py", line 1268, in dropout
+    return _VF.dropout_(input, p, training) if inplace else _VF.dropout(input, p, training)
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+torch.cuda.OutOfMemoryError: CUDA out of memory. Tried to allocate 20.00 MiB. GPU 0 has a total capacity of 23.46 GiB of which 13.88 MiB is free. Process 201450 has 3.87 GiB memory in use. Process 280405 has 3.16 GiB memory in use. Process 426620 has 15.43 GiB memory in use. Including non-PyTorch memory, this process has 1012.00 MiB memory in use. Of the allocated memory 797.09 MiB is allocated by PyTorch, and 6.91 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)

@@ -1,0 +1,59 @@
+Found results directory: /mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/vit_test_results_20241231_125704
+Using checkpoint: /mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/vit_test_results_20241231_125704/checkpoint_epoch_5.pth
+Loaded pretrained weights with message: _IncompatibleKeys(missing_keys=['patch_norm.weight', 'patch_norm.bias', 'year_embedding.weight', 'year_proj.weight', 'year_proj.bias', 'regression_head.0.weight', 'regression_head.0.bias', 'regression_head.1.weight', 'regression_head.1.bias', 'regression_head.4.weight', 'regression_head.4.bias', 'regression_head.7.weight', 'regression_head.7.bias', 'regression_head.8.weight', 'regression_head.8.bias'], unexpected_keys=[])
+Error: Unrecognized CachingAllocator option: max_split_size_mb=512
+Current working directory: /mnt/guanabana/raid/home/qinxu/Python/LCF-ViT
+Available directories: [PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/.git'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/README.md'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/Download_Training.R'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/Download_Training.sh'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/Download_Validation.R'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/Download_Validation.sh'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/Mask_validation_africa_subpixel.sh'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/Mask_training_africa_subpixel.sh'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/Mask_validation_africa_subpixel.R'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/Mask_training_africa_subpixel.R'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/subpix_val_africa_utm_plot.R'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/Composites.R'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/Composite_functions.R'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/Mask_and_TransformUTM.R'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/data_loading_new.py'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/data_loading.py'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/my_dataset.py'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/rf1_train.py'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/rf1.py'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/utils.py'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/__pycache__'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/vit_test_results_20241212_144938'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/bash_files'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/new_vit1_predict.py'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/vit_test_results_20241218_122426'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/vit3_predict.py'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/vit_model2_monthly_5.py'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/vit_model1_monthly_15.py'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/vit_test_results_20241230_163631'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/vit_test_results_20241231_125704'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/mlp_yearly_datloder_test.py'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/vit_model3_yearly_15_old.py'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/vit_model3_yearly_15.py'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/mlp_predict_yearly.py'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/vit3_train_old.py'), PosixPath('/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/vit3_train.py')]
+Traceback (most recent call last):
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/vit3_predict.py", line 373, in <module>
+    main()
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/vit3_predict.py", line 316, in main
+    evaluator = ModelEvaluator(latest_checkpoint, device)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/vit3_predict.py", line 20, in __init__
+    checkpoint = torch.load(model_path, map_location=device)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/serialization.py", line 1026, in load
+    return _load(opened_zipfile,
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/serialization.py", line 1438, in _load
+    result = unpickler.load()
+             ^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/serialization.py", line 1408, in persistent_load
+    typed_storage = load_tensor(dtype, nbytes, key, _maybe_decode_ascii(location))
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/serialization.py", line 1382, in load_tensor
+    wrap_storage=restore_location(storage, location),
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/serialization.py", line 1311, in restore_location
+    return default_restore_location(storage, str(map_location))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/serialization.py", line 391, in default_restore_location
+    result = fn(storage, location)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/serialization.py", line 266, in _cuda_deserialize
+    device = validate_cuda_device(location)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/serialization.py", line 247, in validate_cuda_device
+    device = torch.cuda._utils._get_device_index(location, True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/cuda/_utils.py", line 38, in _get_device_index
+    return _torch_get_device_index(device, optional, allow_cpu)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/_utils.py", line 813, in _get_device_index
+    device_idx = _get_current_device_index()
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/_utils.py", line 752, in _get_current_device_index
+    return _get_device_attr(lambda m: m.current_device())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/_utils.py", line 741, in _get_device_attr
+    return get_member(torch.cuda)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/_utils.py", line 752, in <lambda>
+    return _get_device_attr(lambda m: m.current_device())
+                                      ^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/cuda/__init__.py", line 787, in current_device
+    _lazy_init()
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/cuda/__init__.py", line 302, in _lazy_init
+    torch._C._cuda_init()
+RuntimeError: Unrecognized CachingAllocator option: max_split_size_mb=512
