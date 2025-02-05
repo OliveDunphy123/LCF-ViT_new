@@ -5,11 +5,14 @@ import numpy as np
 import os
 from pathlib import Path
 import rasterio
+import datetime
 
-class TrainingDataset(Dataset):
-    def __init__(self, base_path, temporal_mode="monthly", debug=False):
+class BaseDataset(Dataset):
+    """Base class for Sentinel and Ground Truth datasets"""
+    def __init__(self, base_path, split, temporal_mode="monthly", debug=False):
         self.debug = debug
         self.temporal_mode = temporal_mode
+        self.split = split  # "Training", "Val_set", or "Test_set"
         self.bands = ['B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B8A', 'B11', 'B12']
         self.skipped_locations = {}
         self.skip_statistics = {
@@ -22,16 +25,20 @@ class TrainingDataset(Dataset):
         }
         
         # Set paths
-        self.sentinel_path = os.path.join(base_path, "Sentinel_Normalised", "Training", temporal_mode)
-        self.gt_path = os.path.join(base_path, "GT_rasters","Training","Stacked")
+        self.sentinel_path = os.path.join(base_path, "Sentinel_Normalised", split, temporal_mode)
+        if split == "Training":
+            self.gt_path = os.path.join(base_path, "GT_rasters", split, "Stacked")
+        else:
+            self.gt_path = os.path.join(base_path, "GT_rasters", split)
         
-        print(f"\nInitializing Training Dataset:")
+
+        print(f"\nInitializing {split} Dataset ({temporal_mode}):")
         print(f"Sentinel data path: {self.sentinel_path}")
         print(f"Ground truth path: {self.gt_path}")
         
-        # Create validation cache
-        self.valid_gt = {}
-        self.valid_sentinel = {}
+        # # Create validation cache
+        # self.valid_gt = {}
+        # self.valid_sentinel = {}
 
         self.unique_ids = self._get_unique_ids_efficient()
         print(f"Found {len(self.unique_ids)} unique location-time pairs for {temporal_mode} training data")
@@ -65,7 +72,7 @@ class TrainingDataset(Dataset):
             try:
                 with rasterio.open(first_path) as src:
                     data = src.read()
-                    if data.shape[0] != 4:  # Should have 4 years
+                    if data.shape[0] not in [4,5]:  # Should have 4 years, but val_set and test_set have 5 years
                         self.skipped_locations[loc_id] = f"Incomplete years: {data.shape[0]}"
                         self.skip_statistics['incomplete_gt_years'] += 1
                         continue
@@ -74,8 +81,10 @@ class TrainingDataset(Dataset):
                         self.skip_statistics['wrong_gt_shape'] += 1
                         continue
                     
+                    n_years  = data.shape[0]
                     valid_gt[loc_id] = {
-                        'years': list(range(2015, 2019)),
+                        'years': list(range(2015, 2015+n_years)),
+                        'n_years': n_years,
                         'paths': [os.path.join(self.gt_path, f) for f in sorted(files)]
                     }
             except Exception as e:
@@ -86,7 +95,7 @@ class TrainingDataset(Dataset):
 
     def _validate_sentinel_data(self, valid_locations):
         """Efficiently validate all Sentinel data in one pass"""
-        print("Validating Sentinel data...")
+        print(f"Validating Sentinel data for {self.temporal_mode} mode...")
         valid_pairs = []
         
         for loc_id in valid_locations:
@@ -99,7 +108,10 @@ class TrainingDataset(Dataset):
             # Get all files for this location at once
             try:
                 files = set(os.listdir(sentinel_loc_path))
-            except:
+                # if self.debug:
+                #     print(f"Found {len(files)} files in {sentinel_loc_path}")
+            except Exception as e:
+                print(f"Cannot read Sentinel directory {sentinel_loc_path}: {str(e)}")
                 self.skipped_locations[loc_id] = "Cannot read Sentinel directory"
                 self.skip_statistics['missing_sentinel'] += 1
                 continue
@@ -107,12 +119,18 @@ class TrainingDataset(Dataset):
             # Define expected time periods
             if self.temporal_mode == "monthly":
                 time_periods = []
-                for year in range(2015, 2019):
+                start_year = 2015
+                end_year = 2019 
+                for year in range(start_year, end_year):
                     start_month = 7 if year == 2015 else 1
-                    for month in range(start_month, 13):
+                    end_month = 12
+                    for month in range(start_month, end_month+1):
                         time_periods.append(f"{year}-{month:02d}")
-            else:
+            else: #yearly
                 time_periods = [str(year) for year in range(2015, 2019)]
+
+            # if self.debug:
+            #     print(f"Expected time periods: {time_periods}")
 
             # Validate each time period
             for period in time_periods:
@@ -120,6 +138,8 @@ class TrainingDataset(Dataset):
                 for band in self.bands:
                     filename = f"{period}_{band}.tif"
                     if filename not in files:
+                        # if self.debug:
+                        #     print(f"Missing file: {filename}")
                         valid = False
                         break
 
@@ -132,100 +152,15 @@ class TrainingDataset(Dataset):
                                 valid_pairs.append(f"{loc_id}_{period}")
                             else:
                                 self.skip_statistics['wrong_sentinel_shape'] += 1
-                    except:
+                    except Exception as e:
+                        # if self.debug:
+                        #     print(f"Error reading file: {sample_file}")
                         self.skip_statistics['wrong_sentinel_shape'] += 1
                 else:
                     self.skip_statistics['incomplete_sentinel'] += 1
 
+        print(f"Found {len(valid_pairs)} valid pairs for {self.temporal_mode} mode")
         return valid_pairs
-    # def _analyze_gt_coverage(self):
-    #     """Analyze year coverage in ground truth files"""
-    #     gt_files = [f for f in os.listdir(self.gt_path) if f.endswith('.tif') and 'fraction_1' in f]
-    #     coverage_stats = {'complete': 0, 'incomplete': 0}
-    #     year_counts = {2015: 0, 2016: 0, 2017: 0, 2018: 0}
-        
-    #     print("\nAnalyzing ground truth coverage...")
-        
-    #     for gt_file in gt_files:
-    #         path = os.path.join(self.gt_path, gt_file)
-    #         with rasterio.open(path) as src:
-    #             num_years = src.count
-    #             if num_years == 4:
-    #                 coverage_stats['complete'] += 1
-    #             else:
-    #                 coverage_stats['incomplete'] += 1
-    #                 loc_id = gt_file.split('_')[1]
-    #                 print(f"Location {loc_id} only has {num_years} years of data")
-                    
-    #             # Count available years (assuming they start from 2015)
-    #             for year_idx in range(num_years):
-    #                 year = 2015 + year_idx
-    #                 year_counts[year] += 1
-        
-    #     print(f"\nGround truth coverage statistics:")
-    #     print(f"Complete (4 years): {coverage_stats['complete']} locations")
-    #     print(f"Incomplete (<4 years): {coverage_stats['incomplete']} locations")
-    #     print("\nYear-wise coverage:")
-    #     for year, count in year_counts.items():
-    #         print(f"{year}: {count} locations")
-        
-    #     return coverage_stats, year_counts
-
-    # def _get_unique_ids(self):
-    #     """Get list of unique location_time combinations"""
-    #     # # First analyze ground truth coverage
-    #     # coverage_stats, year_counts = self._analyze_gt_coverage()
-    #     unique_ids = []
-        
-    #     # get locations that have GT data
-    #     gt_files = [f for f in os.listdir(self.gt_path) if f.endswith('.tif') and 'fraction_1' in f]
-    #     #gt_locations = set()
-    #     for gt_file  in gt_files:
-
-    #         # Extract location ID from "stacked_2753185_fraction_1.tif" format
-    #         loc_id = gt_file .split('_')[1]
-    #         gt_path = os.path.join(self.gt_path, gt_file)
-    #         #gt_locations.add(loc_id)
-
-    #         # Get available years for this location
-    #         with rasterio.open(gt_path) as src:
-    #             num_years = src.count
-    #             available_years = list(range(2015, 2015 + num_years))
-
-    #         # Get corresponding sentinel data
-    #         sentinel_loc_path = os.path.join(self.sentinel_path, loc_id)
-    #         if not os.path.exists(sentinel_loc_path):
-    #             continue
-
-    #     # # Then check which of these have sentinel data
-    #     # for loc_id in gt_locations:
-    #     #     sentinel_loc_path = os.path.join(self.sentinel_path, loc_id)
-    #     #     if not os.path.exists(sentinel_loc_path):
-    #     #         continue
-                
-    #         files_in_dir = os.listdir(sentinel_loc_path)
-
-    #         if self.temporal_mode == "monthly":
-    #             # Only include months from avaiable years
-    #             time_periods = {filename[:7] for filename in files_in_dir 
-    #                           if filename.endswith('.tif') and
-    #                           int(filename[:4]) in available_years}
-                
-    #         else:
-    #             #Only include avaiable years
-    #             time_periods = {filename[:4] for filename in files_in_dir 
-    #                           if filename.endswith('.tif') and
-    #                           int(filename[:4]) in available_years}
-            
-    #         for period in time_periods:
-    #             unique_ids.append(f"{loc_id}_{period}")
-        
-    #     if self.debug:
-    #         print("\nFirst few unique IDs:")
-    #         for uid in sorted(unique_ids)[:5]:
-    #             print(f"- {uid}")
-        
-    #     return sorted(unique_ids)
 
     def _get_unique_ids_efficient(self):
         """Get unique IDs efficiently using batch validation"""
@@ -245,9 +180,11 @@ class TrainingDataset(Dataset):
 
     def _save_detailed_report(self):
         """Save detailed report of dataset statistics"""
-        report_path = f"dataset_report_{self.temporal_mode}.txt"
-        with open(report_path, 'w') as f:
-            f.write(f"Dataset Report ({self.temporal_mode} mode)\n")
+        report_dir = "/mnt/guanabana/raid/hdd1/qinxu/Python/LCF-ViT/data/results"
+        os.makedirs(report_dir, exist_ok=True)
+        report_path = os.path.join (report_dir, f"dataset_report_{self.temporal_mode}.txt")
+        with open(report_path, 'a') as f:
+            f.write(f"Dataset Report ({self.split} - {self.temporal_mode} mode)\n")
             f.write("=" * 50 + "\n\n")
             f.write("Overall Statistics:\n")
             f.write(f"Complete location-time pairs: {len(self.unique_ids)}\n")
@@ -258,17 +195,18 @@ class TrainingDataset(Dataset):
             f.write("\nSkipped Locations Detail:\n")
             for loc_id, reason in sorted(self.skipped_locations.items()):
                 f.write(f"Location {loc_id}: {reason}\n")
+            f.write("\n" + "=" * 50 + "\n")
         print(f"\nDetailed report saved to: {report_path}")
 
     def _load_sentinel(self, sentinel_paths):
         """
         Load Sentinel data and reshape to include temporal dimension
-        Monthly: [10, 42, 15, 15] (bands, months, spatial, spatial)
-        Yearly: [10, 4, 15, 15] (bands, years, spatial, spatial)
+        Monthly: [10, 42, 15, 15] (bands, months, spatial, spatial) where H,W = 15 or 5
+        Yearly: [10, 4, 15, 15] (bands, years, spatial, spatial) where H,W = 15 or 5
         """
         # Expected number of temporal samples
         expected_samples = 42 if self.temporal_mode == "monthly" else 4
-        
+    
         # Initialize array with correct shape
         data_array = np.zeros((10, expected_samples, 15, 15))  # [bands, time, H, W]
         
@@ -410,40 +348,35 @@ class TrainingDataset(Dataset):
             raise
 
 
-def create_training_dataloaders(base_path, batch_size=32, num_workers=4, debug=True):
-    """Create training dataloaders for both monthly and yearly data"""
-    print("\nCreating training dataloaders...")
-    
+def create_dataloaders(base_path, batch_size=32, num_workers=4, debug=True):
+    """Create dataloaders for training, validation and testing both monthly and yearly data"""
+    print("\nCreating dataloaders...")
+
+    # Clear existing report files at the start
+    for mode in ["monthly", "yearly"]:
+        report_path = f"dataset_report_{mode}.txt"
+        with open(report_path, 'w') as f:
+            f.write("Dataset Loading Report\n")
+            f.write("=" * 50 + "\n")
+            f.write(f"Generated on: {datetime.datetime.now()}\n\n")
+
+    dataloaders = {}
     try:
-        monthly_dataset = TrainingDataset(
-            base_path=base_path,
-            temporal_mode="monthly",
-            debug=debug
-        )
+        # Create dataloaders for each split and temporal mode
+        for split in ["Training", "Val_set", "Test_set"]:
+            dataloaders[split] = {}
+            for mode in ["monthly", "yearly"]:
+                dataset = BaseDataset(base_path, split, mode, debug)
+                dataloaders[split][mode] = DataLoader(
+                    dataset,
+                    batch_size=batch_size,
+                    shuffle=True if split == "Training" else False, # Only shuffle training data
+                    num_workers=num_workers,
+                    pin_memory=True # Faster transfer to GPU
+                )
+                print(f"{split} {mode} dataloader created")
         
-        yearly_dataset = TrainingDataset(
-            base_path=base_path,
-            temporal_mode="yearly",
-            debug=debug
-        )
-        
-        monthly_loader = DataLoader(
-            monthly_dataset,
-            batch_size=batch_size,
-            shuffle=True,
-            num_workers=num_workers,
-            pin_memory=True
-        )
-        
-        yearly_loader = DataLoader(
-            yearly_dataset,
-            batch_size=batch_size,
-            shuffle=True,
-            num_workers=num_workers,
-            pin_memory=True
-        )
-        
-        return monthly_loader, yearly_loader
+        return dataloaders
     
     except Exception as e:
         print(f"Error creating dataloaders: {str(e)}")
@@ -451,27 +384,81 @@ def create_training_dataloaders(base_path, batch_size=32, num_workers=4, debug=T
 
 if __name__ == "__main__":
     base_path = "/mnt/guanabana/raid/shared/dropbox/QinLennart"
-    #base_path = "/mnt/guanabana/raid/oldhome/shared/dropbox/QinLennart"
+
+    # # Test each split separately first
+    # try:
+    #     # Test Training data
+    #     print("\nTesting Training data loading...")
+    #     training_dataset = BaseDataset(
+    #         base_path=base_path,
+    #         split="Training",
+    #         temporal_mode="monthly",
+    #         debug=True
+    #     )
+        
+    #     # Test Validation data
+    #     print("\nTesting Validation data loading...")
+    #     val_dataset = BaseDataset(
+    #         base_path=base_path,
+    #         split="Val_set",  # Using Val_set instead of Validation
+    #         temporal_mode="monthly",
+    #         debug=True
+    #     )
+        
+    #     # Test Testing data
+    #     print("\nTesting Testing data loading...")
+    #     test_dataset = BaseDataset(
+    #         base_path=base_path,
+    #         split="Test_set",
+    #         temporal_mode="monthly",
+    #         debug=True
+    #     )
+
     try:
-        monthly_loader, yearly_loader = create_training_dataloaders(
-            base_path=base_path,
-            batch_size=32,
-            debug=True
-        )
+        # Test both temporal modes
+        for mode in ["monthly", "yearly"]:
+            # Test Training data
+            print(f"\nTesting Training data loading ({mode})...")
+            training_dataset = BaseDataset(
+                base_path=base_path,
+                split="Training",
+                temporal_mode=mode,
+                debug=True
+            )
+            
+            # Test Validation data
+            print(f"\nTesting Validation data loading ({mode})...")
+            val_dataset = BaseDataset(
+                base_path=base_path,
+                split="Val_set",
+                temporal_mode=mode,
+                debug=True
+            )
+            
+            # Test Testing data
+            print(f"\nTesting Testing data loading ({mode})...")
+            test_dataset = BaseDataset(
+                base_path=base_path,
+                split="Test_set",
+                temporal_mode=mode,
+                debug=True
+            )
+
+    # try:
+    #     dataloaders = create_dataloaders(
+    #         base_path=base_path,
+    #         batch_size=32,
+    #         debug=True
+    #     )
         
-        # Test monthly loader
-        print("\nTesting monthly loader:")
-        batch = next(iter(monthly_loader))
-        print(f"Monthly Sentinel shape: {batch['sentinel'].shape}")
-        print(f"Monthly Ground truth shape: {batch['ground_truth'].shape}")
-        print(f"Sample location: {batch['location_id'][0]}")
-        
-        # Test yearly loader
-        print("\nTesting yearly loader:")
-        batch = next(iter(yearly_loader))
-        print(f"Yearly Sentinel shape: {batch['sentinel'].shape}")
-        print(f"Yearly Ground truth shape: {batch['ground_truth'].shape}")
-        print(f"Sample location: {batch['location_id'][0]}")
+    #     # Test all dataloaders
+    #     for split in ["Training", "Val_set", "Test_set"]:
+    #         for mode in ["monthly", "yearly"]:
+    #             print(f"\nTesting {split} {mode} loader:")
+    #             batch = next(iter(dataloaders[split][mode]))
+    #             print(f"Sentinel shape: {batch['sentinel'].shape}")
+    #             print(f"Ground truth shape: {batch['ground_truth'].shape}")
+    #             print(f"Sample location: {batch['location_id'][0]}")
         
     except Exception as e:
         print(f"Error during testing: {str(e)}")
