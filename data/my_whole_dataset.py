@@ -451,7 +451,7 @@ def create_training_dataloaders(base_path, batch_size=32, num_workers=4, debug=T
 
 if __name__ == "__main__":
     base_path = "/mnt/guanabana/raid/shared/dropbox/QinLennart"
-    
+    #base_path = "/mnt/guanabana/raid/oldhome/shared/dropbox/QinLennart"
     try:
         monthly_loader, yearly_loader = create_training_dataloaders(
             base_path=base_path,
@@ -475,3 +475,4 @@ if __name__ == "__main__":
         
     except Exception as e:
         print(f"Error during testing: {str(e)}")
+
