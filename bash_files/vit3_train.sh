@@ -4,7 +4,7 @@
 #SBATCH --gpus-per-task=1
 #SBATCH --mem-per-gpu=8000
 
-cd /mnt/guanabana/raid/home/qinxu/Python/LCF-ViT
+cd /mnt/guanabana/raid/hdd1/qinxu/Python/LCF-ViT
 
 source activate $HOME/land_cover_fraction/
 

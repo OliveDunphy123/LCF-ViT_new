@@ -1,0 +1,2 @@
+/var/spool/slurmd/job06223/slurm_script: line 7: cd: /mnt/guanabana/raid/hdd1/qinxu/Python/LCF-ViT: No such file or directory
+python: can't open file '/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/bash_files/training/vit3_train.py': [Errno 2] No such file or directory

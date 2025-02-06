@@ -208,7 +208,8 @@ class BaseDataset(Dataset):
         expected_samples = 42 if self.temporal_mode == "monthly" else 4
     
         # Initialize array with correct shape
-        data_array = np.zeros((10, expected_samples, 15, 15))  # [bands, time, H, W]
+        data_array_15 = np.zeros((10, expected_samples, 15, 15))  # [bands, time, H, W]
+        data_array_5 = np.zeros((10, expected_samples, 5, 5))  # [bands, time, H, W]
         
         # Group files by band and time
         for band_idx, band in enumerate(self.bands):
@@ -223,9 +224,15 @@ class BaseDataset(Dataset):
                     if band_data.shape != (15, 15):
                         print(f"Warning: Unexpected shape at {file_path}: {band_data.shape}")
                         continue
-                    data_array[band_idx, t] = band_data
+                    #Store full resolution data
+                    data_array_15[band_idx, t] = band_data
+                    #Store center 5*5 data
+                    start_idx = 5
+                    data_array_5[band_idx, t] = band_data[start_idx:start_idx+5, start_idx:start_idx+5]
         
-        return torch.from_numpy(data_array).float()
+        return {
+            'full_res': torch.from_numpy(data_array_15).float(),
+            'center_crop': torch.from_numpy(data_array_5).float()}
 
     
     def _load_ground_truth(self, gt_paths, time_period):
@@ -338,7 +345,8 @@ class BaseDataset(Dataset):
                 raise ValueError(f"Error loading Ground Truth data: {str(e)}")
             
             return {
-                'sentinel': sentinel_data,
+                'sentinel_full': sentinel_data['full_res'],
+                'sentinel_crop': sentinel_data['center_crop'],
                 'ground_truth': gt_data,
                 'location_id': unique_id
             }
@@ -385,35 +393,6 @@ def create_dataloaders(base_path, batch_size=32, num_workers=4, debug=True):
 if __name__ == "__main__":
     base_path = "/mnt/guanabana/raid/shared/dropbox/QinLennart"
 
-    # # Test each split separately first
-    # try:
-    #     # Test Training data
-    #     print("\nTesting Training data loading...")
-    #     training_dataset = BaseDataset(
-    #         base_path=base_path,
-    #         split="Training",
-    #         temporal_mode="monthly",
-    #         debug=True
-    #     )
-        
-    #     # Test Validation data
-    #     print("\nTesting Validation data loading...")
-    #     val_dataset = BaseDataset(
-    #         base_path=base_path,
-    #         split="Val_set",  # Using Val_set instead of Validation
-    #         temporal_mode="monthly",
-    #         debug=True
-    #     )
-        
-    #     # Test Testing data
-    #     print("\nTesting Testing data loading...")
-    #     test_dataset = BaseDataset(
-    #         base_path=base_path,
-    #         split="Test_set",
-    #         temporal_mode="monthly",
-    #         debug=True
-    #     )
-
     try:
         # Test both temporal modes
         for mode in ["monthly", "yearly"]:
@@ -444,21 +423,6 @@ if __name__ == "__main__":
                 debug=True
             )
 
-    # try:
-    #     dataloaders = create_dataloaders(
-    #         base_path=base_path,
-    #         batch_size=32,
-    #         debug=True
-    #     )
-        
-    #     # Test all dataloaders
-    #     for split in ["Training", "Val_set", "Test_set"]:
-    #         for mode in ["monthly", "yearly"]:
-    #             print(f"\nTesting {split} {mode} loader:")
-    #             batch = next(iter(dataloaders[split][mode]))
-    #             print(f"Sentinel shape: {batch['sentinel'].shape}")
-    #             print(f"Ground truth shape: {batch['ground_truth'].shape}")
-    #             print(f"Sample location: {batch['location_id'][0]}")
         
     except Exception as e:
         print(f"Error during testing: {str(e)}")
