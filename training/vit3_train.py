@@ -13,51 +13,106 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from models.vit_model3_yearly_15 import create_model
-from data.my_whole_dataset import create_training_dataloaders
+from data.my_whole_dataset import create_yearly_15_dataloader
 
+# def calculate_accuracy_metrics(predictions, ground_truth):
+#         """
+#         Calculate accuracy metrics for land cover fraction predictions
+        
+#         Args:
+#             predictions: tensor of shape [B, 7, T, 5, 5] 
+#             ground_truth: tensor of shape [B, 7, T, 5, 5]
+            
+#         Returns:
+#             Dictionary containing various accuracy metrics
+#         """
+        
+#         # Mean Absolute Error for each class
+#         mae_per_class = torch.mean(torch.abs(predictions - ground_truth), dim=(0,2,3,4))
+        
+#         # Root Mean Square Error for each class
+#         rmse_per_class = torch.sqrt(torch.mean((predictions - ground_truth)**2, dim=(0,2,3,4)))
+        
+#         # Overall accuracy (considering predictions within 10% of ground truth as correct)
+#         tolerance = 0.05
+#         correct_predictions = torch.abs(predictions - ground_truth) <= tolerance
+#         overall_accuracy = torch.mean(correct_predictions.float())
+        
+#         # R² score for each class
+#         r2_scores = []
+#         for class_idx in range(7):
+#             y_true = ground_truth[:,class_idx].flatten()
+#             y_pred = predictions[:,class_idx].flatten()
+            
+#             ss_tot = torch.sum((y_true - torch.mean(y_true))**2)
+#             ss_res = torch.sum((y_true - y_pred)**2)
+            
+#             r2 = 1 - (ss_res / (ss_tot + 1e-8))
+#             r2_scores.append(r2.item())
+        
+#         return {
+#             'mae_per_class': mae_per_class,
+#             'rmse_per_class': rmse_per_class,
+#             'overall_accuracy': overall_accuracy,
+#             'r2_scores': r2_scores
+#         }
 
 def calculate_accuracy_metrics(predictions, ground_truth):
-        """
-        Calculate accuracy metrics for land cover fraction predictions
+    """
+    Calculate accuracy metrics for land cover fraction predictions
+    
+    Args:
+        predictions: tensor of shape [B, 7, T, 5, 5] 
+        ground_truth: tensor of shape [B, 7, T, 5, 5]
         
-        Args:
-            predictions: tensor of shape [B, 7, T, 5, 5] 
-            ground_truth: tensor of shape [B, 7, T, 5, 5]
-            
-        Returns:
-            Dictionary containing various accuracy metrics
-        """
-        import torch
+    Returns:
+        Dictionary containing various accuracy metrics
+    """
+    # Flatten predictions and ground truth for overall metrics
+    pred_flat = predictions.flatten()
+    truth_flat = ground_truth.flatten()
+    
+    # Overall R²
+    ss_tot = torch.sum((truth_flat - torch.mean(truth_flat))**2)
+    ss_res = torch.sum((truth_flat - pred_flat)**2)
+    overall_r2 = 1 - (ss_res / (ss_tot + 1e-8))
+    
+    # Overall MAE and RMSE
+    overall_mae = torch.mean(torch.abs(pred_flat - truth_flat))
+    overall_rmse = torch.sqrt(torch.mean((pred_flat - truth_flat)**2))
+    
+    # Mean Absolute Error for each class
+    mae_per_class = torch.mean(torch.abs(predictions - ground_truth), dim=(0,2,3,4))
+    
+    # Root Mean Square Error for each class
+    rmse_per_class = torch.sqrt(torch.mean((predictions - ground_truth)**2, dim=(0,2,3,4)))
+    
+    # Overall accuracy (considering predictions within 10% of ground truth as correct)
+    tolerance = 0.05
+    correct_predictions = torch.abs(predictions - ground_truth) <= tolerance
+    overall_accuracy = torch.mean(correct_predictions.float())
+    
+    # R² score for each class
+    r2_scores = []
+    for class_idx in range(7):
+        y_true = ground_truth[:,class_idx].flatten()
+        y_pred = predictions[:,class_idx].flatten()
         
-        # Mean Absolute Error for each class
-        mae_per_class = torch.mean(torch.abs(predictions - ground_truth), dim=(0,2,3,4))
+        ss_tot = torch.sum((y_true - torch.mean(y_true))**2)
+        ss_res = torch.sum((y_true - y_pred)**2)
         
-        # Root Mean Square Error for each class
-        rmse_per_class = torch.sqrt(torch.mean((predictions - ground_truth)**2, dim=(0,2,3,4)))
-        
-        # Overall accuracy (considering predictions within 10% of ground truth as correct)
-        tolerance = 0.1
-        correct_predictions = torch.abs(predictions - ground_truth) <= tolerance
-        overall_accuracy = torch.mean(correct_predictions.float())
-        
-        # R² score for each class
-        r2_scores = []
-        for class_idx in range(7):
-            y_true = ground_truth[:,class_idx].flatten()
-            y_pred = predictions[:,class_idx].flatten()
-            
-            ss_tot = torch.sum((y_true - torch.mean(y_true))**2)
-            ss_res = torch.sum((y_true - y_pred)**2)
-            
-            r2 = 1 - (ss_res / (ss_tot + 1e-8))
-            r2_scores.append(r2.item())
-        
-        return {
-            'mae_per_class': mae_per_class,
-            'rmse_per_class': rmse_per_class,
-            'overall_accuracy': overall_accuracy,
-            'r2_scores': r2_scores
-        }
+        r2 = 1 - (ss_res / (ss_tot + 1e-8))
+        r2_scores.append(r2.item())
+    
+    return {
+        'overall_accuracy': overall_accuracy.item(),
+        'overall_r2': overall_r2.item(),
+        'overall_mae': overall_mae.item(),
+        'overall_rmse': overall_rmse.item(),
+        'mae_per_class': mae_per_class,
+        'rmse_per_class': rmse_per_class,
+        'r2_scores': r2_scores
+    }
 
 class ViTTrainer:
     def __init__(
@@ -86,7 +141,7 @@ class ViTTrainer:
         
         # Create timestamp and directory at initialization
         self.timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.results_dir = Path(f"vit_test_results_{self.timestamp}")
+        self.results_dir = Path(f"vit_yearly_15_results_{self.timestamp}")
         self.results_dir.mkdir(exist_ok=True)
 
         # Initialize TensorBoard writer
@@ -166,19 +221,6 @@ class ViTTrainer:
         print(f"Initialized trainer. Training results will be saved to: {self.results_dir}")
 
 
-    # def log_metrics(writer, metrics, epoch, prefix='train'):
-    #     """Log metrics to tensorboard"""
-    #     writer.add_scalar(f'{prefix}/overall_accuracy', metrics['overall_accuracy'], epoch)
-        
-    #     for i, mae in enumerate(metrics['mae_per_class']):
-    #         writer.add_scalar(f'{prefix}/mae_class_{i}', mae, epoch)
-            
-    #     for i, rmse in enumerate(metrics['rmse_per_class']):
-    #         writer.add_scalar(f'{prefix}/rmse_class_{i}', rmse, epoch)
-            
-    #     for i, r2 in enumerate(metrics['r2_scores']):
-    #         writer.add_scalar(f'{prefix}/r2_class_{i}', r2, epoch)
-
     def criterion(self, pred, target):
         """Combined loss function"""
         if self.custom_criterion is not None:
@@ -202,8 +244,9 @@ class ViTTrainer:
         epoch_predictions = []
         epoch_ground_truth = []
 
-        progress_bar = tqdm(self.train_loader, desc=f'Epoch {epoch}')
-        for batch_idx, batch in enumerate(progress_bar):
+        #progress_bar = tqdm(self.train_loader, desc=f'Epoch {epoch}')
+        print(f"\rEpoch {epoch} - Training...", end="")
+        for batch_idx, batch in enumerate(self.train_loader):
             sentinel_data = batch['sentinel'].to(self.device)
             ground_truth = batch['ground_truth'].to(self.device)
             
@@ -249,12 +292,12 @@ class ViTTrainer:
                     if param.grad is not None:
                         self.writer.add_histogram(f'gradients/{name}', param.grad, global_step)
 
-            progress_bar.set_postfix({
-                'loss': f'{loss.item():.4f}',
-                'main_loss': f'{main_loss.item():.4f}',
-                'smooth_loss': f'{smooth_loss.item():.4f}',
-                'lr': f'{self.scheduler.get_last_lr()[0]:.6f}'
-            })
+            # progress_bar.set_postfix({
+            #     'loss': f'{loss.item():.4f}',
+            #     'main_loss': f'{main_loss.item():.4f}',
+            #     'smooth_loss': f'{smooth_loss.item():.4f}',
+            #     'lr': f'{self.scheduler.get_last_lr()[0]:.6f}'
+            # })
         
         # Calculate epoch metrics
         epoch_predictions = torch.cat(epoch_predictions, dim=0)
@@ -263,6 +306,10 @@ class ViTTrainer:
         
         # Log epoch metrics
         self.writer.add_scalar('Train/overall_accuracy', metrics['overall_accuracy'], epoch)
+        self.writer.add_scalar('Train/overall_r2', metrics['overall_r2'], epoch)
+        self.writer.add_scalar('Train/overall_mae', metrics['overall_mae'], epoch)
+        self.writer.add_scalar('Train/overall_rmse', metrics['overall_rmse'], epoch)
+
         for i, mae in enumerate(metrics['mae_per_class']):
             self.writer.add_scalar(f'Train/mae_class_{i}', mae, epoch)
         for i, r2 in enumerate(metrics['r2_scores']):
@@ -278,11 +325,19 @@ class ViTTrainer:
         self.writer.add_scalar('Loss/train_main', avg_main_loss, epoch)
         self.writer.add_scalar('Loss/train_smooth', avg_smooth_loss, epoch)
 
+        # print(f"\nEpoch {epoch} Training Metrics:")
+        # print(f"Overall Accuracy: {metrics['overall_accuracy']:.4f}")
+        # print("MAE per class:", ' '.join(f"{mae:.4f}" for mae in metrics['mae_per_class']))
+        # print("R² scores:", ' '.join(f"{r2:.4f}" for r2 in metrics['r2_scores']))
         print(f"\nEpoch {epoch} Training Metrics:")
         print(f"Overall Accuracy: {metrics['overall_accuracy']:.4f}")
+        print(f"Overall R²: {metrics['overall_r2']:.4f}")
+        print(f"Overall MAE: {metrics['overall_mae']:.4f}")
+        print(f"Overall RMSE: {metrics['overall_rmse']:.4f}")
         print("MAE per class:", ' '.join(f"{mae:.4f}" for mae in metrics['mae_per_class']))
+        print("RMSE per class:", ' '.join(f"{rmse:.4f}" for rmse in metrics['rmse_per_class']))
         print("R² scores:", ' '.join(f"{r2:.4f}" for r2 in metrics['r2_scores']))
-        
+
         return avg_loss, avg_main_loss, avg_smooth_loss, metrics
 
     def validate(self, epoch):
@@ -324,6 +379,10 @@ class ViTTrainer:
         # Log validation metrics
         self.writer.add_scalar('Val/loss', total_loss / len(self.val_loader), epoch)
         self.writer.add_scalar('Val/overall_accuracy', metrics['overall_accuracy'], epoch)
+        self.writer.add_scalar('Val/overall_r2', metrics['overall_r2'], epoch)
+        self.writer.add_scalar('Val/overall_mae', metrics['overall_mae'], epoch)
+        self.writer.add_scalar('Val/overall_rmse', metrics['overall_rmse'], epoch)
+
         for i, mae in enumerate(metrics['mae_per_class']):
             self.writer.add_scalar(f'Val/mae_class_{i}', mae, epoch)
         for i, r2 in enumerate(metrics['r2_scores']):
@@ -338,12 +397,22 @@ class ViTTrainer:
         self.writer.add_scalar('Loss/val_main', avg_main_loss, epoch)
         self.writer.add_scalar('Loss/val_smooth', avg_smooth_loss, epoch)
 
+        # print(f"\nEpoch {epoch} Validation Metrics:")
+        # print(f"Loss: {avg_loss:.4f} (Main: {avg_main_loss:.4f}, Smooth: {avg_smooth_loss:.4f})")
+        # print(f"Overall Accuracy: {metrics['overall_accuracy']:.4f}")
+        # print("MAE per class:", ' '.join(f"{mae:.4f}" for mae in metrics['mae_per_class']))
+        # print("R² scores:", ' '.join(f"{r2:.4f}" for r2 in metrics['r2_scores']))
+        
         print(f"\nEpoch {epoch} Validation Metrics:")
         print(f"Loss: {avg_loss:.4f} (Main: {avg_main_loss:.4f}, Smooth: {avg_smooth_loss:.4f})")
         print(f"Overall Accuracy: {metrics['overall_accuracy']:.4f}")
+        print(f"Overall R²: {metrics['overall_r2']:.4f}")
+        print(f"Overall MAE: {metrics['overall_mae']:.4f}")
+        print(f"Overall RMSE: {metrics['overall_rmse']:.4f}")
         print("MAE per class:", ' '.join(f"{mae:.4f}" for mae in metrics['mae_per_class']))
+        print("RMSE per class:", ' '.join(f"{rmse:.4f}" for rmse in metrics['rmse_per_class']))
         print("R² scores:", ' '.join(f"{r2:.4f}" for r2 in metrics['r2_scores']))
-        
+
         return avg_loss, avg_main_loss, avg_smooth_loss, metrics
     
     def save_checkpoint(self, epoch, train_loss, metrics, val_loss=None, is_best=False):
@@ -367,19 +436,19 @@ class ViTTrainer:
             torch.save(checkpoint, best_model_path)
             print(f"Saved best model with loss: {train_loss:.4f}")
 
-    def plot_training_curves(self, train_losses, val_losses, save_path):
-        import matplotlib.pyplot as plt
+    # def plot_training_curves(self, train_losses, val_losses, save_path):
+    #     import matplotlib.pyplot as plt
         
-        plt.figure(figsize=(10, 6))
-        plt.plot(train_losses, label='Training Loss')
-        plt.plot(val_losses, label='Validation Loss')
-        plt.xlabel('Epoch')
-        plt.ylabel('Loss')
-        plt.title('Training and Validation Losses')
-        plt.legend()
-        plt.grid(True)
-        plt.savefig(save_path)
-        plt.close()
+    #     plt.figure(figsize=(10, 6))
+    #     plt.plot(train_losses, label='Training Loss')
+    #     plt.plot(val_losses, label='Validation Loss')
+    #     plt.xlabel('Epoch')
+    #     plt.ylabel('Loss')
+    #     plt.title('Training and Validation Losses')
+    #     plt.legend()
+    #     plt.grid(True)
+    #     plt.savefig(save_path)
+    #     plt.close()
 
     def train(self):
         """Main training loop"""
@@ -408,20 +477,7 @@ class ViTTrainer:
             
             train_losses.append(train_loss)
             val_losses.append(val_loss)
-        #     # Save checkpoint 
-        #     if epoch % 5 == 0 or epoch == self.num_epochs:
-        #         self.save_checkpoint(epoch, train_loss)
-        #         self.plot_training_curves(train_losses,
-        #                              val_losses,
-        #                              self.results_dir/f'learning_curves_epoch_{epoch}.png')
-
-        #     if train_loss < best_loss:
-        #         best_loss = train_loss
-        #         self.save_checkpoint(epoch, train_loss)
-        #         print(f"New best loss:{best_loss:.4f}")
         
-        # print("\nTraining completed!")
-        # print(f"Best loss achieved: {best_loss:.4f}")
 
         # Save checkpoints
             is_best = current_accuracy > best_accuracy
@@ -436,32 +492,6 @@ class ViTTrainer:
         print("\nTraining completed!")
         print(f"Best accuracy achieved: {best_accuracy:.4f}")
         self.writer.close()
-
-def split_by_location(dataset, train_ratio=0.85):
-    """Split dataset by unique locations."""
-    # Get all unique location IDs
-    location_ids = set()
-    for item in dataset.unique_ids:
-        loc_id = item.split('_')[0]
-        location_ids.add(loc_id)
-    location_ids = sorted(list(location_ids))
-    
-    # Randomly split locations
-    num_train = int(len(location_ids) * train_ratio)
-    train_locations = set(random.sample(location_ids, num_train))
-    
-    # Create indices for train and validation
-    train_indices = []
-    val_indices = []
-    
-    for idx, item in enumerate(dataset.unique_ids):
-        loc_id = item.split('_')[0]
-        if loc_id in train_locations:
-            train_indices.append(idx)
-        else:
-            val_indices.append(idx)
-    
-    return train_indices, val_indices
 
 
 def main():
@@ -478,38 +508,19 @@ def main():
     model = create_model()
     print("Model created successfully")
     
-    # Create dataloaders
-    _, yearly_loader = create_training_dataloaders(
+    # Create dataloaders for train, val and test
+    train_loader = create_yearly_15_dataloader(
         base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart",
-        batch_size=32
+        split="Training",
+        batch_size=16
     )
     
-    # Split data by locations
-    train_indices, val_indices = split_by_location(yearly_loader.dataset, train_ratio=0.85)
-    print(f"Number of training locations: {len(set(item.split('_')[0] for item in [yearly_loader.dataset.unique_ids[i] for i in train_indices]))}")
-    print(f"Number of validation locations: {len(set(item.split('_')[0] for item in [yearly_loader.dataset.unique_ids[i] for i in val_indices]))}")
-    
-    # Create train and validation datasets
-    train_dataset = Subset(yearly_loader.dataset, train_indices)
-    val_dataset = Subset(yearly_loader.dataset, val_indices)  # noqa: F841
-    
-    train_loader = DataLoader(
-        train_dataset,
-        batch_size=32,
-        shuffle=True,
-        num_workers=4,
-        pin_memory=True
-    )
-
-    val_loader = DataLoader(
-        val_dataset,
-        batch_size=32,
-        shuffle=False,
-        num_workers=4,
-        pin_memory=True
+    val_loader = create_yearly_15_dataloader(
+        base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart", 
+        split="Val_set",
+        batch_size=16
     )
     
-    # Create trainer
     trainer = ViTTrainer(
         model=model,
         train_loader=train_loader,
@@ -518,7 +529,6 @@ def main():
         num_epochs=50
     )
     
-    # Train model
     trainer.train()
 
 if __name__ == "__main__":

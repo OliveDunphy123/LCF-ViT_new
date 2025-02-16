@@ -1,12 +1,14 @@
 #!/bin/bash
-#SBATCH --partition=all
+#SBATCH --partition=gpu
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
-#SBATCH --gres=gpu:gtx_1080_ti:1
-#SBATCH --mem=18000M
+#SBATCH --cpus-per-task=12
+#SBATCH --gpus=1
+#SBATCH --mem=48000M
 
-export CUDA_VISIBLE_DEVICES=3
-export NUMEXPR_MAX_THREADS=8
+export NUMEXPR_MAX_THREADS=12
 
-# Reduce batch size to avoid OOM
-BATCH_SIZE=8 python vit1_train.py
+cd /mnt/guanabana/raid/hdd1/qinxu/Python/LCF-ViT
+
+micromamba activate $HOME/land_cover_fraction/
+
+python training/vit1_train.py

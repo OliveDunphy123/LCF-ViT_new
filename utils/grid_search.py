@@ -17,12 +17,7 @@ from data.my_dataset import create_training_dataloaders
 from utils.loss_functions import (
     MSEAndL1Loss,
     SmoothL1Loss,
-    CrossEntropyLoss,
-    HuberFocalLoss,
-    DistributionLoss,
-    TemporalConsistencyLoss,
-    CompositeMultiLoss,
-    BoundaryAwareLoss
+    CrossEntropyLoss
 )
 
 # Define various loss functions to try
@@ -95,12 +90,7 @@ def run_grid_search():
             {'name': 'mse_l1', 'params': {'mse_weight': 1.0, 'l1_weight': 0.5}},
             {'name': 'smooth_l1', 'params': {'smooth_weight': 0.1, 'beta': 1.0}},
             {'name': 'mse', 'params': {}},
-            {'name': 'cross_entropy', 'params': {'num_bins': 20, 'smoothing': 0.1}},
-            {'name': 'huber_focal', 'params': {'beta': 1.0, 'alpha': 2.0, 'gamma': 0.5}},
-            {'name': 'distribution', 'params': {'kl_weight': 0.1}},
-            {'name': 'temporal', 'params': {'smooth_weight': 0.1, 'trend_weight': 0.05}},
-            {'name': 'composite', 'params': {}},
-            {'name': 'boundary_aware', 'params': {'boundary_weight': 2.0}}
+            {'name': 'cross_entropy', 'params': {'num_bins': 20, 'smoothing': 0.1}}
         ],
         'scheduler_type': ['onecycle', 'cosine']
     }

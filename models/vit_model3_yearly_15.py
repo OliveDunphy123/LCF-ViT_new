@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F 
 from functools import partial
+import torch.utils
 from torchgeo.models import ViTSmall16_Weights
 import numpy as np
 from typing import Union, cast
@@ -458,10 +459,14 @@ class SentinelViT(nn.Module):
             tokens[:, 0] = tokens[:, 0] + year_embed
             
             # Process through transformer blocks
-            for blk in self.blocks:
-                tokens = blk(tokens)
-                #if i == 0:  # Print shape after first block
-                    #print(f"After first transformer block: {tokens.shape}")  # [B, 26, 384]
+            if self.training:
+                for blk in self.blocks:
+                    tokens = torch.utils.checkpoint.checkpoint(blk, tokens)
+            else:
+                for blk in self.blocks:
+                    tokens = blk(tokens)
+                    #if i == 0:  # Print shape after first block
+                        #print(f"After first transformer block: {tokens.shape}")  # [B, 26, 384]
             
             # Extract features
             features = self.norm(tokens)[:, 0]

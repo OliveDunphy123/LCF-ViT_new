@@ -1,0 +1,104 @@
+Found 3 GPUs!
+GPU 0: NVIDIA GeForce GTX 1080 Ti
+Memory allocated: 0.00 GB
+Memory reserved: 0.00 GB
+GPU 1: NVIDIA GeForce GTX 1080 Ti
+Memory allocated: 0.00 GB
+Memory reserved: 0.00 GB
+GPU 2: NVIDIA GeForce GTX 1080 Ti
+Memory allocated: 0.00 GB
+Memory reserved: 0.00 GB
+
+Batch size per GPU: 12
+Total batch size: 36
+Loaded pretrained weights with message: _IncompatibleKeys(missing_keys=['patch_norm.weight', 'patch_norm.bias', 'temp_embedding.weight', 'temp_proj.weight', 'temp_proj.bias', 'regression_head.0.weight', 'regression_head.0.bias', 'regression_head.1.weight', 'regression_head.1.bias', 'regression_head.4.weight', 'regression_head.4.bias', 'regression_head.7.weight', 'regression_head.7.bias'], unexpected_keys=[])
+
+Initializing Training Dataset (monthly):
+Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/Sentinel_Normalised/Training/monthly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Training/Stacked
+Validating ground truth files...
+
+Validation Results:
+Valid locations: 11269
+Skipped locations: 41
+- missing_gt: 0
+- incomplete_gt_years: 22
+- wrong_gt_shape: 19
+- missing_sentinel: 0
+- incomplete_sentinel: 0
+- wrong_sentinel_shape: 0
+Validating Sentinel data for monthly mode...
+
+Validation Summary:
+Total locations checked: 11269
+Locations with missing bands: 2
+Total incomplete months: 84
+Valid location-time pairs: 207228
+
+Found 207228 complete location-time pairs
+Found 207228 unique location-time pairs for monthly training data
+
+Detailed report saved to: /mnt/guanabana/raid/hdd1/qinxu/Python/LCF-ViT/data/results/dataset_report_monthly.txt
+
+DataLoader Configuration:
+Dataset size: 207228 samples
+Batch size: 36
+Number of workers: 12
+Expected iterations per epoch: 5756
+
+Initializing Val_set Dataset (monthly):
+Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/Sentinel_Normalised/Val_set/monthly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Val_set
+Validating ground truth files...
+
+Validation Results:
+Valid locations: 2087
+Skipped locations: 0
+- missing_gt: 0
+- incomplete_gt_years: 0
+- wrong_gt_shape: 0
+- missing_sentinel: 0
+- incomplete_sentinel: 0
+- wrong_sentinel_shape: 0
+Validating Sentinel data for monthly mode...
+
+Validation Summary:
+Total locations checked: 2087
+Locations with missing bands: 37
+Total incomplete months: 1554
+Valid location-time pairs: 86100
+
+Found 86100 complete location-time pairs
+Found 86100 unique location-time pairs for monthly training data
+
+Detailed report saved to: /mnt/guanabana/raid/hdd1/qinxu/Python/LCF-ViT/data/results/dataset_report_monthly.txt
+
+DataLoader Configuration:
+Dataset size: 86100 samples
+Batch size: 36
+Number of workers: 12
+Expected iterations per epoch: 2391
+Using 3 GPUs!
+
+Starting training for 50 epochs...
+
+Epoch 1/50
+Epoch 1:   0%|          | 0/5756 [00:00<?, ?it/s]Epoch 1:   0%|          | 0/5756 [00:07<?, ?it/s]
+
+Shape Analysis:
+Ground Truth shape: torch.Size([36, 7, 42, 5, 5])
+Expected shape: [batch_size, 7 fractions, 1 year, 5, 5]
+Predictions shape: torch.Size([36, 7, 42, 5, 5])
+Expected shape: [batch_size, 7 fractions, 1 year, 5, 5]
+Traceback (most recent call last):
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/training/vit1_train.py", line 615, in <module>
+    main()
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/training/vit1_train.py", line 578, in main
+    trainer.train()
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/training/vit1_train.py", line 481, in train
+    train_loss, train_metrics = self.train_epoch(epoch)
+                                ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/training/vit1_train.py", line 377, in train_epoch
+    'overall_accuracy': running_correct / running_total,
+                        ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~
+ZeroDivisionError: division by zero

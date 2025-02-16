@@ -1,0 +1,658 @@
+
+Grid Search Information:
+Number of combinations to test: 24
+Using 1/2 of training data and 1/2 of validation data
+Epochs per configuration: 15
+Approximate storage required: 9.0 GB
+Estimated total time: 8 hours 0 minutes
+
+Testing combination 1/24:
+{
+  "learning_rate": 0.0001,
+  "weight_decay": 0.001,
+  "batch_size": 12,
+  "loss_function": {
+    "name": "mse_l1",
+    "params": {
+      "mse_weight": 0.7,
+      "l1_weight": 0.3
+    }
+  },
+  "scheduler_type": "onecycle"
+}
+
+Initializing Training Dataset (yearly):
+Stacked Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/Stacked_Sentinel/Training/yearly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Training/Stacked
+
+Validating data...
+
+Validation Results:
+Valid locations: 4922
+Skipped locations: 6388
+Found 4922 valid locations with complete data
+
+DataLoader Configuration:
+Mode: yearly, Resolution: full
+Dataset size: 4922 locations
+Batch size: 12 locations
+Number of workers: 8
+Expected iterations per epoch: 410
+
+Initializing Val_set Dataset (yearly):
+Stacked Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/Stacked_Sentinel/Val_set/yearly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Val_set
+
+Validating data...
+
+Validation Results:
+Valid locations: 2087
+Skipped locations: 0
+Found 2087 valid locations with complete data
+
+DataLoader Configuration:
+Mode: yearly, Resolution: full
+Dataset size: 2087 locations
+Batch size: 12 locations
+Number of workers: 8
+Expected iterations per epoch: 173
+Original patch embedding shape: torch.Size([384, 13, 16, 16])
+Shape after band selection: torch.Size([384, 10, 16, 16])
+Final patch embedding shape: torch.Size([384, 10, 3, 3])
+Original position embedding shape: torch.Size([1, 197, 384])
+Final position embedding shape: torch.Size([1, 26, 384])
+
+Weight Loading Summary:
+Successfully loaded: 148 weights
+Adapted weights: patch_embed.proj.weight, pos_embed
+
+Missing keys:
+  - patch_norm.weight
+  - patch_norm.bias
+  - year_embedding.weight
+  - year_proj.weight
+  - year_proj.bias
+  ... and 14 more
+Loaded pretrained weights with message: _IncompatibleKeys(missing_keys=['patch_norm.weight', 'patch_norm.bias', 'year_embedding.weight', 'year_proj.weight', 'year_proj.bias', 'regression_head.0.weight', 'regression_head.0.bias', 'regression_head.1.weight', 'regression_head.1.bias', 'regression_head.2.weight', 'regression_head.2.bias', 'regression_head.2.running_mean', 'regression_head.2.running_var', 'regression_head.5.weight', 'regression_head.5.bias', 'regression_head.8.weight', 'regression_head.8.bias', 'regression_head.9.weight', 'regression_head.9.bias'], unexpected_keys=[])
+Initializing ViTTrainer with parameters:
+scheduler_type: onecycle
+criterion: MSEAndL1Loss(
+  (mse_loss): MSELoss()
+  (l1_loss): L1Loss()
+)
+Initialized trainer. Training results will be saved to: vit_yearly_15_results_20250216_193139
+
+Starting training for 15 epochs...
+
+Epoch 1/15
+Epoch 1 - Training.../mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/utils/checkpoint.py:460: UserWarning: torch.utils.checkpoint: please pass in use_reentrant=True or use_reentrant=False explicitly. The default value of use_reentrant will be updated to be False in the future. To maintain current behavior, pass use_reentrant=True. It is recommended that you use use_reentrant=False. Refer to docs for more details on the differences between the two variants.
+  warnings.warn(
+Error with combination 1: CUDA out of memory. Tried to allocate 2.00 MiB. GPU 0 has a total capacity of 10.90 GiB of which 3.25 MiB is free. Process 2756359 has 10.50 GiB memory in use. Including non-PyTorch memory, this process has 410.00 MiB memory in use. Of the allocated memory 202.66 MiB is allocated by PyTorch, and 27.34 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+
+Testing combination 2/24:
+{
+  "learning_rate": 0.0001,
+  "weight_decay": 0.001,
+  "batch_size": 12,
+  "loss_function": {
+    "name": "smooth_l1",
+    "params": {
+      "smooth_weight": 0.1,
+      "beta": 1.0
+    }
+  },
+  "scheduler_type": "onecycle"
+}
+
+Initializing Training Dataset (yearly):
+Stacked Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/Stacked_Sentinel/Training/yearly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Training/Stacked
+
+Validating data...
+
+Validation Results:
+Valid locations: 4922
+Skipped locations: 6388
+Found 4922 valid locations with complete data
+
+DataLoader Configuration:
+Mode: yearly, Resolution: full
+Dataset size: 4922 locations
+Batch size: 12 locations
+Number of workers: 8
+Expected iterations per epoch: 410
+
+Initializing Val_set Dataset (yearly):
+Stacked Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/Stacked_Sentinel/Val_set/yearly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Val_set
+
+Validating data...
+
+Validation Results:
+Valid locations: 2087
+Skipped locations: 0
+Found 2087 valid locations with complete data
+
+DataLoader Configuration:
+Mode: yearly, Resolution: full
+Dataset size: 2087 locations
+Batch size: 12 locations
+Number of workers: 8
+Expected iterations per epoch: 173
+Original patch embedding shape: torch.Size([384, 13, 16, 16])
+Shape after band selection: torch.Size([384, 10, 16, 16])
+Final patch embedding shape: torch.Size([384, 10, 3, 3])
+Original position embedding shape: torch.Size([1, 197, 384])
+Final position embedding shape: torch.Size([1, 26, 384])
+
+Weight Loading Summary:
+Successfully loaded: 148 weights
+Adapted weights: patch_embed.proj.weight, pos_embed
+
+Missing keys:
+  - patch_norm.weight
+  - patch_norm.bias
+  - year_embedding.weight
+  - year_proj.weight
+  - year_proj.bias
+  ... and 14 more
+Loaded pretrained weights with message: _IncompatibleKeys(missing_keys=['patch_norm.weight', 'patch_norm.bias', 'year_embedding.weight', 'year_proj.weight', 'year_proj.bias', 'regression_head.0.weight', 'regression_head.0.bias', 'regression_head.1.weight', 'regression_head.1.bias', 'regression_head.2.weight', 'regression_head.2.bias', 'regression_head.2.running_mean', 'regression_head.2.running_var', 'regression_head.5.weight', 'regression_head.5.bias', 'regression_head.8.weight', 'regression_head.8.bias', 'regression_head.9.weight', 'regression_head.9.bias'], unexpected_keys=[])
+Initializing ViTTrainer with parameters:
+scheduler_type: onecycle
+criterion: SmoothL1Loss(
+  (smooth_l1): SmoothL1Loss()
+)
+Error with combination 2: CUDA out of memory. Tried to allocate 20.00 MiB. GPU 0 has a total capacity of 10.90 GiB of which 15.25 MiB is free. Process 2756359 has 10.50 GiB memory in use. Including non-PyTorch memory, this process has 398.00 MiB memory in use. Of the allocated memory 187.72 MiB is allocated by PyTorch, and 30.28 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+
+Testing combination 3/24:
+{
+  "learning_rate": 0.0001,
+  "weight_decay": 0.001,
+  "batch_size": 12,
+  "loss_function": {
+    "name": "cross_entropy",
+    "params": {
+      "num_bins": 20,
+      "smoothing": 0.1
+    }
+  },
+  "scheduler_type": "onecycle"
+}
+
+Initializing Training Dataset (yearly):
+Stacked Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/Stacked_Sentinel/Training/yearly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Training/Stacked
+
+Validating data...
+
+Validation Results:
+Valid locations: 4922
+Skipped locations: 6388
+Found 4922 valid locations with complete data
+
+DataLoader Configuration:
+Mode: yearly, Resolution: full
+Dataset size: 4922 locations
+Batch size: 12 locations
+Number of workers: 8
+Expected iterations per epoch: 410
+
+Initializing Val_set Dataset (yearly):
+Stacked Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/Stacked_Sentinel/Val_set/yearly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Val_set
+
+Validating data...
+
+Validation Results:
+Valid locations: 2087
+Skipped locations: 0
+Found 2087 valid locations with complete data
+
+DataLoader Configuration:
+Mode: yearly, Resolution: full
+Dataset size: 2087 locations
+Batch size: 12 locations
+Number of workers: 8
+Expected iterations per epoch: 173
+Original patch embedding shape: torch.Size([384, 13, 16, 16])
+Shape after band selection: torch.Size([384, 10, 16, 16])
+Final patch embedding shape: torch.Size([384, 10, 3, 3])
+Original position embedding shape: torch.Size([1, 197, 384])
+Final position embedding shape: torch.Size([1, 26, 384])
+
+Weight Loading Summary:
+Successfully loaded: 148 weights
+Adapted weights: patch_embed.proj.weight, pos_embed
+
+Missing keys:
+  - patch_norm.weight
+  - patch_norm.bias
+  - year_embedding.weight
+  - year_proj.weight
+  - year_proj.bias
+  ... and 14 more
+Loaded pretrained weights with message: _IncompatibleKeys(missing_keys=['patch_norm.weight', 'patch_norm.bias', 'year_embedding.weight', 'year_proj.weight', 'year_proj.bias', 'regression_head.0.weight', 'regression_head.0.bias', 'regression_head.1.weight', 'regression_head.1.bias', 'regression_head.2.weight', 'regression_head.2.bias', 'regression_head.2.running_mean', 'regression_head.2.running_var', 'regression_head.5.weight', 'regression_head.5.bias', 'regression_head.8.weight', 'regression_head.8.bias', 'regression_head.9.weight', 'regression_head.9.bias'], unexpected_keys=[])
+Initializing ViTTrainer with parameters:
+scheduler_type: onecycle
+criterion: CrossEntropyLoss()
+Error with combination 3: CUDA out of memory. Tried to allocate 20.00 MiB. GPU 0 has a total capacity of 10.90 GiB of which 15.25 MiB is free. Process 2756359 has 10.50 GiB memory in use. Including non-PyTorch memory, this process has 398.00 MiB memory in use. Of the allocated memory 187.72 MiB is allocated by PyTorch, and 30.28 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+
+Testing combination 4/24:
+{
+  "learning_rate": 0.0001,
+  "weight_decay": 0.001,
+  "batch_size": 15,
+  "loss_function": {
+    "name": "mse_l1",
+    "params": {
+      "mse_weight": 0.7,
+      "l1_weight": 0.3
+    }
+  },
+  "scheduler_type": "onecycle"
+}
+
+Initializing Training Dataset (yearly):
+Stacked Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/Stacked_Sentinel/Training/yearly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Training/Stacked
+
+Validating data...
+
+Validation Results:
+Valid locations: 4922
+Skipped locations: 6388
+Found 4922 valid locations with complete data
+
+DataLoader Configuration:
+Mode: yearly, Resolution: full
+Dataset size: 4922 locations
+Batch size: 15 locations
+Number of workers: 8
+Expected iterations per epoch: 328
+
+Initializing Val_set Dataset (yearly):
+Stacked Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/Stacked_Sentinel/Val_set/yearly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Val_set
+
+Validating data...
+
+Validation Results:
+Valid locations: 2087
+Skipped locations: 0
+Found 2087 valid locations with complete data
+
+DataLoader Configuration:
+Mode: yearly, Resolution: full
+Dataset size: 2087 locations
+Batch size: 15 locations
+Number of workers: 8
+Expected iterations per epoch: 139
+Original patch embedding shape: torch.Size([384, 13, 16, 16])
+Shape after band selection: torch.Size([384, 10, 16, 16])
+Final patch embedding shape: torch.Size([384, 10, 3, 3])
+Original position embedding shape: torch.Size([1, 197, 384])
+Final position embedding shape: torch.Size([1, 26, 384])
+
+Weight Loading Summary:
+Successfully loaded: 148 weights
+Adapted weights: patch_embed.proj.weight, pos_embed
+
+Missing keys:
+  - patch_norm.weight
+  - patch_norm.bias
+  - year_embedding.weight
+  - year_proj.weight
+  - year_proj.bias
+  ... and 14 more
+Loaded pretrained weights with message: _IncompatibleKeys(missing_keys=['patch_norm.weight', 'patch_norm.bias', 'year_embedding.weight', 'year_proj.weight', 'year_proj.bias', 'regression_head.0.weight', 'regression_head.0.bias', 'regression_head.1.weight', 'regression_head.1.bias', 'regression_head.2.weight', 'regression_head.2.bias', 'regression_head.2.running_mean', 'regression_head.2.running_var', 'regression_head.5.weight', 'regression_head.5.bias', 'regression_head.8.weight', 'regression_head.8.bias', 'regression_head.9.weight', 'regression_head.9.bias'], unexpected_keys=[])
+Initializing ViTTrainer with parameters:
+scheduler_type: onecycle
+criterion: MSEAndL1Loss(
+  (mse_loss): MSELoss()
+  (l1_loss): L1Loss()
+)
+Error with combination 4: CUDA out of memory. Tried to allocate 20.00 MiB. GPU 0 has a total capacity of 10.90 GiB of which 15.25 MiB is free. Process 2756359 has 10.50 GiB memory in use. Including non-PyTorch memory, this process has 398.00 MiB memory in use. Of the allocated memory 187.72 MiB is allocated by PyTorch, and 30.28 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+
+Testing combination 5/24:
+{
+  "learning_rate": 0.0001,
+  "weight_decay": 0.001,
+  "batch_size": 15,
+  "loss_function": {
+    "name": "smooth_l1",
+    "params": {
+      "smooth_weight": 0.1,
+      "beta": 1.0
+    }
+  },
+  "scheduler_type": "onecycle"
+}
+
+Initializing Training Dataset (yearly):
+Stacked Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/Stacked_Sentinel/Training/yearly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Training/Stacked
+
+Validating data...
+
+Validation Results:
+Valid locations: 4922
+Skipped locations: 6388
+Found 4922 valid locations with complete data
+
+DataLoader Configuration:
+Mode: yearly, Resolution: full
+Dataset size: 4922 locations
+Batch size: 15 locations
+Number of workers: 8
+Expected iterations per epoch: 328
+
+Initializing Val_set Dataset (yearly):
+Stacked Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/Stacked_Sentinel/Val_set/yearly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Val_set
+
+Validating data...
+
+Validation Results:
+Valid locations: 2087
+Skipped locations: 0
+Found 2087 valid locations with complete data
+
+DataLoader Configuration:
+Mode: yearly, Resolution: full
+Dataset size: 2087 locations
+Batch size: 15 locations
+Number of workers: 8
+Expected iterations per epoch: 139
+Original patch embedding shape: torch.Size([384, 13, 16, 16])
+Shape after band selection: torch.Size([384, 10, 16, 16])
+Final patch embedding shape: torch.Size([384, 10, 3, 3])
+Original position embedding shape: torch.Size([1, 197, 384])
+Final position embedding shape: torch.Size([1, 26, 384])
+
+Weight Loading Summary:
+Successfully loaded: 148 weights
+Adapted weights: patch_embed.proj.weight, pos_embed
+
+Missing keys:
+  - patch_norm.weight
+  - patch_norm.bias
+  - year_embedding.weight
+  - year_proj.weight
+  - year_proj.bias
+  ... and 14 more
+Loaded pretrained weights with message: _IncompatibleKeys(missing_keys=['patch_norm.weight', 'patch_norm.bias', 'year_embedding.weight', 'year_proj.weight', 'year_proj.bias', 'regression_head.0.weight', 'regression_head.0.bias', 'regression_head.1.weight', 'regression_head.1.bias', 'regression_head.2.weight', 'regression_head.2.bias', 'regression_head.2.running_mean', 'regression_head.2.running_var', 'regression_head.5.weight', 'regression_head.5.bias', 'regression_head.8.weight', 'regression_head.8.bias', 'regression_head.9.weight', 'regression_head.9.bias'], unexpected_keys=[])
+Initializing ViTTrainer with parameters:
+scheduler_type: onecycle
+criterion: SmoothL1Loss(
+  (smooth_l1): SmoothL1Loss()
+)
+Error with combination 5: CUDA out of memory. Tried to allocate 20.00 MiB. GPU 0 has a total capacity of 10.90 GiB of which 15.25 MiB is free. Process 2756359 has 10.50 GiB memory in use. Including non-PyTorch memory, this process has 398.00 MiB memory in use. Of the allocated memory 187.72 MiB is allocated by PyTorch, and 30.28 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+
+Testing combination 6/24:
+{
+  "learning_rate": 0.0001,
+  "weight_decay": 0.001,
+  "batch_size": 15,
+  "loss_function": {
+    "name": "cross_entropy",
+    "params": {
+      "num_bins": 20,
+      "smoothing": 0.1
+    }
+  },
+  "scheduler_type": "onecycle"
+}
+
+Initializing Training Dataset (yearly):
+Stacked Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/Stacked_Sentinel/Training/yearly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Training/Stacked
+
+Validating data...
+
+Validation Results:
+Valid locations: 4922
+Skipped locations: 6388
+Found 4922 valid locations with complete data
+
+DataLoader Configuration:
+Mode: yearly, Resolution: full
+Dataset size: 4922 locations
+Batch size: 15 locations
+Number of workers: 8
+Expected iterations per epoch: 328
+
+Initializing Val_set Dataset (yearly):
+Stacked Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/Stacked_Sentinel/Val_set/yearly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Val_set
+
+Validating data...
+
+Validation Results:
+Valid locations: 2087
+Skipped locations: 0
+Found 2087 valid locations with complete data
+
+DataLoader Configuration:
+Mode: yearly, Resolution: full
+Dataset size: 2087 locations
+Batch size: 15 locations
+Number of workers: 8
+Expected iterations per epoch: 139
+Original patch embedding shape: torch.Size([384, 13, 16, 16])
+Shape after band selection: torch.Size([384, 10, 16, 16])
+Final patch embedding shape: torch.Size([384, 10, 3, 3])
+Original position embedding shape: torch.Size([1, 197, 384])
+Final position embedding shape: torch.Size([1, 26, 384])
+
+Weight Loading Summary:
+Successfully loaded: 148 weights
+Adapted weights: patch_embed.proj.weight, pos_embed
+
+Missing keys:
+  - patch_norm.weight
+  - patch_norm.bias
+  - year_embedding.weight
+  - year_proj.weight
+  - year_proj.bias
+  ... and 14 more
+Loaded pretrained weights with message: _IncompatibleKeys(missing_keys=['patch_norm.weight', 'patch_norm.bias', 'year_embedding.weight', 'year_proj.weight', 'year_proj.bias', 'regression_head.0.weight', 'regression_head.0.bias', 'regression_head.1.weight', 'regression_head.1.bias', 'regression_head.2.weight', 'regression_head.2.bias', 'regression_head.2.running_mean', 'regression_head.2.running_var', 'regression_head.5.weight', 'regression_head.5.bias', 'regression_head.8.weight', 'regression_head.8.bias', 'regression_head.9.weight', 'regression_head.9.bias'], unexpected_keys=[])
+Initializing ViTTrainer with parameters:
+scheduler_type: onecycle
+criterion: CrossEntropyLoss()
+Error with combination 6: CUDA out of memory. Tried to allocate 20.00 MiB. GPU 0 has a total capacity of 10.90 GiB of which 15.25 MiB is free. Process 2756359 has 10.50 GiB memory in use. Including non-PyTorch memory, this process has 398.00 MiB memory in use. Of the allocated memory 187.72 MiB is allocated by PyTorch, and 30.28 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+
+Testing combination 7/24:
+{
+  "learning_rate": 0.0001,
+  "weight_decay": 0.01,
+  "batch_size": 12,
+  "loss_function": {
+    "name": "mse_l1",
+    "params": {
+      "mse_weight": 0.7,
+      "l1_weight": 0.3
+    }
+  },
+  "scheduler_type": "onecycle"
+}
+
+Initializing Training Dataset (yearly):
+Stacked Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/Stacked_Sentinel/Training/yearly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Training/Stacked
+
+Validating data...
+
+Validation Results:
+Valid locations: 4922
+Skipped locations: 6388
+Found 4922 valid locations with complete data
+
+DataLoader Configuration:
+Mode: yearly, Resolution: full
+Dataset size: 4922 locations
+Batch size: 12 locations
+Number of workers: 8
+Expected iterations per epoch: 410
+
+Initializing Val_set Dataset (yearly):
+Stacked Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/Stacked_Sentinel/Val_set/yearly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Val_set
+
+Validating data...
+
+Validation Results:
+Valid locations: 2087
+Skipped locations: 0
+Found 2087 valid locations with complete data
+
+DataLoader Configuration:
+Mode: yearly, Resolution: full
+Dataset size: 2087 locations
+Batch size: 12 locations
+Number of workers: 8
+Expected iterations per epoch: 173
+Original patch embedding shape: torch.Size([384, 13, 16, 16])
+Shape after band selection: torch.Size([384, 10, 16, 16])
+Final patch embedding shape: torch.Size([384, 10, 3, 3])
+Original position embedding shape: torch.Size([1, 197, 384])
+Final position embedding shape: torch.Size([1, 26, 384])
+
+Weight Loading Summary:
+Successfully loaded: 148 weights
+Adapted weights: patch_embed.proj.weight, pos_embed
+
+Missing keys:
+  - patch_norm.weight
+  - patch_norm.bias
+  - year_embedding.weight
+  - year_proj.weight
+  - year_proj.bias
+  ... and 14 more
+Loaded pretrained weights with message: _IncompatibleKeys(missing_keys=['patch_norm.weight', 'patch_norm.bias', 'year_embedding.weight', 'year_proj.weight', 'year_proj.bias', 'regression_head.0.weight', 'regression_head.0.bias', 'regression_head.1.weight', 'regression_head.1.bias', 'regression_head.2.weight', 'regression_head.2.bias', 'regression_head.2.running_mean', 'regression_head.2.running_var', 'regression_head.5.weight', 'regression_head.5.bias', 'regression_head.8.weight', 'regression_head.8.bias', 'regression_head.9.weight', 'regression_head.9.bias'], unexpected_keys=[])
+Initializing ViTTrainer with parameters:
+scheduler_type: onecycle
+criterion: MSEAndL1Loss(
+  (mse_loss): MSELoss()
+  (l1_loss): L1Loss()
+)
+Error with combination 7: CUDA out of memory. Tried to allocate 20.00 MiB. GPU 0 has a total capacity of 10.90 GiB of which 15.25 MiB is free. Process 2756359 has 10.50 GiB memory in use. Including non-PyTorch memory, this process has 398.00 MiB memory in use. Of the allocated memory 187.72 MiB is allocated by PyTorch, and 30.28 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+
+Testing combination 8/24:
+{
+  "learning_rate": 0.0001,
+  "weight_decay": 0.01,
+  "batch_size": 12,
+  "loss_function": {
+    "name": "smooth_l1",
+    "params": {
+      "smooth_weight": 0.1,
+      "beta": 1.0
+    }
+  },
+  "scheduler_type": "onecycle"
+}
+
+Initializing Training Dataset (yearly):
+Stacked Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/Stacked_Sentinel/Training/yearly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Training/Stacked
+
+Validating data...
+
+Validation Results:
+Valid locations: 4922
+Skipped locations: 6388
+Found 4922 valid locations with complete data
+
+DataLoader Configuration:
+Mode: yearly, Resolution: full
+Dataset size: 4922 locations
+Batch size: 12 locations
+Number of workers: 8
+Expected iterations per epoch: 410
+
+Initializing Val_set Dataset (yearly):
+Stacked Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/Stacked_Sentinel/Val_set/yearly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Val_set
+
+Validating data...
+
+Validation Results:
+Valid locations: 2087
+Skipped locations: 0
+Found 2087 valid locations with complete data
+
+DataLoader Configuration:
+Mode: yearly, Resolution: full
+Dataset size: 2087 locations
+Batch size: 12 locations
+Number of workers: 8
+Expected iterations per epoch: 173
+Original patch embedding shape: torch.Size([384, 13, 16, 16])
+Shape after band selection: torch.Size([384, 10, 16, 16])
+Final patch embedding shape: torch.Size([384, 10, 3, 3])
+Original position embedding shape: torch.Size([1, 197, 384])
+Final position embedding shape: torch.Size([1, 26, 384])
+
+Weight Loading Summary:
+Successfully loaded: 148 weights
+Adapted weights: patch_embed.proj.weight, pos_embed
+
+Missing keys:
+  - patch_norm.weight
+  - patch_norm.bias
+  - year_embedding.weight
+  - year_proj.weight
+  - year_proj.bias
+  ... and 14 more
+Loaded pretrained weights with message: _IncompatibleKeys(missing_keys=['patch_norm.weight', 'patch_norm.bias', 'year_embedding.weight', 'year_proj.weight', 'year_proj.bias', 'regression_head.0.weight', 'regression_head.0.bias', 'regression_head.1.weight', 'regression_head.1.bias', 'regression_head.2.weight', 'regression_head.2.bias', 'regression_head.2.running_mean', 'regression_head.2.running_var', 'regression_head.5.weight', 'regression_head.5.bias', 'regression_head.8.weight', 'regression_head.8.bias', 'regression_head.9.weight', 'regression_head.9.bias'], unexpected_keys=[])
+Initializing ViTTrainer with parameters:
+scheduler_type: onecycle
+criterion: SmoothL1Loss(
+  (smooth_l1): SmoothL1Loss()
+)
+Error with combination 8: CUDA out of memory. Tried to allocate 20.00 MiB. GPU 0 has a total capacity of 10.90 GiB of which 15.25 MiB is free. Process 2756359 has 10.50 GiB memory in use. Including non-PyTorch memory, this process has 398.00 MiB memory in use. Of the allocated memory 187.72 MiB is allocated by PyTorch, and 30.28 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+
+Testing combination 9/24:
+{
+  "learning_rate": 0.0001,
+  "weight_decay": 0.01,
+  "batch_size": 12,
+  "loss_function": {
+    "name": "cross_entropy",
+    "params": {
+      "num_bins": 20,
+      "smoothing": 0.1
+    }
+  },
+  "scheduler_type": "onecycle"
+}
+
+Initializing Training Dataset (yearly):
+Stacked Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/Stacked_Sentinel/Training/yearly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Training/Stacked
+
+Validating data...
+
+Validation Results:
+Valid locations: 4922
+Skipped locations: 6388
+Found 4922 valid locations with complete data
+
+DataLoader Configuration:
+Mode: yearly, Resolution: full
+Dataset size: 4922 locations
+Batch size: 12 locations
+Number of workers: 8
+Expected iterations per epoch: 410
+
+Initializing Val_set Dataset (yearly):
+Stacked Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/Stacked_Sentinel/Val_set/yearly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Val_set
+
+Validating data...
+
+Validation Results:
+Valid locations: 2087
+Skipped locations: 0
+Found 2087 valid locations with complete data
+slurmstepd: error: *** JOB 6621 ON guanabana CANCELLED AT 2025-02-16T20:02:38 ***

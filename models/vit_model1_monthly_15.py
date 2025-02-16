@@ -7,6 +7,14 @@ from torchgeo.models import ViTSmall16_Weights
 import numpy as np
 from typing import Union, cast
 
+class Lambda(nn.Module):
+    def __init__(self, func):
+        super().__init__()
+        self.func = func
+
+    def forward(self, x):
+        return self.func(x)
+
 def drop_path(x, drop_prob: float = 0., training: bool = False):
     
     if drop_prob == 0. or not training:
@@ -17,7 +25,7 @@ def drop_path(x, drop_prob: float = 0., training: bool = False):
     random_tensor.floor_()  # binarize
     output = x.div(keep_prob) * random_tensor
     return output
-
+    
 def get_month_encoding_table(embed_dim):
         """Sinusoid month encoding table, for 42 months(2015-2018) indexed from 0-41
         Args:
@@ -267,7 +275,8 @@ class SentinelViT(nn.Module):
             nn.GELU(),
             nn.Dropout(0.1),
             nn.Linear(256, 7 * 25),  # 7 fractions * (5x5) spatial output
-            nn.Softmax() #ensure output are between 0 and 1
+            Lambda(lambda x: x.view(-1, 7, 5, 5)),  # [B, 7, 5, 5]
+            Lambda(lambda x: torch.softmax(x, dim=1))  # Ensures fractions sum to 1 at each pixel
         )
 
         # Initialize weights
@@ -394,12 +403,15 @@ class SentinelViT(nn.Module):
         for t in range(T):
             # Process current timestep
             tokens = self.prepare_tokens(x[:, :, t, :, :])
+            # print(f"Tokens shape: {tokens.shape}")
 
             # Get month embedding for current timestep
             temp_embed = self.temp_embedding(times[:, t])  # [B, temp_embed_dim]
+            # print(f"Temp embed shape: {temp_embed.shape}")
             
             # Expand month embedding to match sequence length
             temp_embed = self.temp_proj(temp_embed)
+            # print(f"Projected temp embed shape: {temp_embed.shape}")
             
             # Concatenate features with month embedding
             tokens[:, 0] = tokens[:,0] + temp_embed
@@ -414,13 +426,23 @@ class SentinelViT(nn.Module):
             # year_features = self.year_encoding[years[:,t]]
             # features = features + self.temporal_embed[:, t, :] + year_features
             # features = self.temporal_norm(features)
-            features = self.norm(tokens)[:,0]
+            features = self.norm(tokens)[:,0] #[B, embed_dim]
+            # print(f"Features shape: {features.shape}")
 
             # Generate predictions
             output = self.regression_head(features) # [B, 7*5*5]
-            output = output.view(B, 7, 5, 5) # reshape to [B,7,5,5]
+            # print(f"Output shape: {output.shape}")
+            output = output.reshape(B, 7, 5, 5) # reshape to [B,7,5,5]
+
+            # Add verification
+            if self.training:  # only check during training to save computation
+                # Check if fractions sum to 1 for each pixel
+                sums = output.sum(dim=1)  # Sum over fraction dimension
+                if not torch.allclose(sums, torch.ones_like(sums), rtol=1e-3):
+                    print(f"Warning: Fractions don't sum to 1. Range: [{sums.min():.3f}, {sums.max():.3f}]")
+                    
             temporal_outputs.append(output)
-        
+            
         return torch.stack(temporal_outputs, dim=2)  # [B, 7, T, 5, 5]
     
 def create_model():

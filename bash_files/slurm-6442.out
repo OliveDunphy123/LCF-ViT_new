@@ -1,0 +1,109 @@
+Found 2 GPUs!
+GPU 0: NVIDIA GeForce GTX 1080 Ti
+Memory allocated: 0.00 GB
+Memory reserved: 0.00 GB
+GPU 1: NVIDIA GeForce GTX 1080 Ti
+Memory allocated: 0.00 GB
+Memory reserved: 0.00 GB
+
+Batch size per GPU: 16
+Total batch size: 32
+Loaded pretrained weights with message: _IncompatibleKeys(missing_keys=['patch_norm.weight', 'patch_norm.bias', 'temp_embedding.weight', 'temp_proj.weight', 'temp_proj.bias', 'regression_head.0.weight', 'regression_head.0.bias', 'regression_head.1.weight', 'regression_head.1.bias', 'regression_head.4.weight', 'regression_head.4.bias', 'regression_head.7.weight', 'regression_head.7.bias'], unexpected_keys=[])
+
+Initializing Training Dataset (monthly):
+Stacked Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/Stacked_Sentinel/Training/monthly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Training/Stacked
+
+Validating data...
+
+Validation Results:
+Valid locations: 4934
+Skipped locations: 6376
+Temporal dimension range: 42 to 42 months
+Found 4934 valid locations with complete data
+
+DataLoader Configuration:
+Mode: monthly, Resolution: crop
+Dataset size: 4934 locations
+Batch size: 32 locations
+Number of workers: 8
+Expected iterations per epoch: 154
+
+Initializing Val_set Dataset (monthly):
+Stacked Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/Stacked_Sentinel/Val_set/monthly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Val_set
+
+Validating data...
+
+Validation Results:
+Valid locations: 2087
+Skipped locations: 0
+Temporal dimension range: 42 to 54 months
+Found 2087 valid locations with complete data
+
+DataLoader Configuration:
+Mode: monthly, Resolution: crop
+Dataset size: 2087 locations
+Batch size: 32 locations
+Number of workers: 8
+Expected iterations per epoch: 65
+Using 2 GPUs!
+
+Starting training for 50 epochs...
+
+Epoch 1/50
+Epoch 1:   0%|          | 0/154 [00:00<?, ?it/s]Epoch 1:   0%|          | 0/154 [00:10<?, ?it/s, loss=0.1485, acc=0.0000, lr=0.000001]Epoch 1:   1%|          | 1/154 [00:10<26:50, 10.52s/it, loss=0.1485, acc=0.0000, lr=0.000001]Epoch 1:   1%|▏         | 2/154 [00:13<15:17,  6.03s/it, loss=0.1485, acc=0.0000, lr=0.000001]Epoch 1:   2%|▏         | 3/154 [00:15<11:09,  4.44s/it, loss=0.1485, acc=0.0000, lr=0.000001]Epoch 1:   3%|▎         | 4/154 [00:18<09:07,  3.65s/it, loss=0.1485, acc=0.0000, lr=0.000001]Epoch 1:   3%|▎         | 5/154 [00:20<07:57,  3.20s/it, loss=0.1485, acc=0.0000, lr=0.000001]Epoch 1:   4%|▍         | 6/154 [00:23<07:20,  2.98s/it, loss=0.1485, acc=0.0000, lr=0.000001]Epoch 1:   5%|▍         | 7/154 [00:25<06:49,  2.78s/it, loss=0.1485, acc=0.0000, lr=0.000001]Epoch 1:   5%|▌         | 8/154 [00:28<06:31,  2.68s/it, loss=0.1485, acc=0.0000, lr=0.000001]Epoch 1:   6%|▌         | 9/154 [00:30<06:12,  2.57s/it, loss=0.1485, acc=0.0000, lr=0.000001]Epoch 1:   6%|▋         | 10/154 [00:32<06:02,  2.52s/it, loss=0.1485, acc=0.0000, lr=0.000001]Epoch 1:   6%|▋         | 10/154 [00:35<06:02,  2.52s/it, loss=0.1431, acc=0.0011, lr=0.000001]Epoch 1:   7%|▋         | 11/154 [00:35<05:55,  2.49s/it, loss=0.1431, acc=0.0011, lr=0.000001]Epoch 1:   8%|▊         | 12/154 [00:37<05:51,  2.48s/it, loss=0.1431, acc=0.0011, lr=0.000001]Epoch 1:   8%|▊         | 13/154 [00:40<05:48,  2.47s/it, loss=0.1431, acc=0.0011, lr=0.000001]Epoch 1:   9%|▉         | 14/154 [00:42<05:45,  2.46s/it, loss=0.1431, acc=0.0011, lr=0.000001]Epoch 1:  10%|▉         | 15/154 [00:45<05:41,  2.46s/it, loss=0.1431, acc=0.0011, lr=0.000001]Epoch 1:  10%|█         | 16/154 [00:47<05:38,  2.46s/it, loss=0.1431, acc=0.0011, lr=0.000001]Epoch 1:  11%|█         | 17/154 [00:50<05:35,  2.45s/it, loss=0.1431, acc=0.0011, lr=0.000001]Epoch 1:  12%|█▏        | 18/154 [00:52<05:29,  2.42s/it, loss=0.1431, acc=0.0011, lr=0.000001]Epoch 1:  12%|█▏        | 19/154 [00:54<05:26,  2.42s/it, loss=0.1431, acc=0.0011, lr=0.000001]Epoch 1:  13%|█▎        | 20/154 [00:57<05:25,  2.43s/it, loss=0.1431, acc=0.0011, lr=0.000001]Epoch 1:  13%|█▎        | 20/154 [01:00<05:25,  2.43s/it, loss=0.1416, acc=0.0046, lr=0.000001]Epoch 1:  14%|█▎        | 21/154 [01:00<05:36,  2.53s/it, loss=0.1416, acc=0.0046, lr=0.000001]Epoch 1:  14%|█▍        | 22/154 [01:02<05:29,  2.50s/it, loss=0.1416, acc=0.0046, lr=0.000001]Epoch 1:  15%|█▍        | 23/154 [01:04<05:23,  2.47s/it, loss=0.1416, acc=0.0046, lr=0.000001]Epoch 1:  16%|█▌        | 24/154 [01:07<05:18,  2.45s/it, loss=0.1416, acc=0.0046, lr=0.000001]Epoch 1:  16%|█▌        | 25/154 [01:09<05:19,  2.47s/it, loss=0.1416, acc=0.0046, lr=0.000001]Epoch 1:  17%|█▋        | 26/154 [01:12<05:21,  2.51s/it, loss=0.1416, acc=0.0046, lr=0.000001]Epoch 1:  18%|█▊        | 27/154 [01:14<05:20,  2.52s/it, loss=0.1416, acc=0.0046, lr=0.000001]Epoch 1:  18%|█▊        | 28/154 [01:17<05:22,  2.56s/it, loss=0.1416, acc=0.0046, lr=0.000001]Epoch 1:  19%|█▉        | 29/154 [01:20<05:15,  2.53s/it, loss=0.1416, acc=0.0046, lr=0.000001]Epoch 1:  19%|█▉        | 30/154 [01:22<05:11,  2.51s/it, loss=0.1416, acc=0.0046, lr=0.000001]Epoch 1:  19%|█▉        | 30/154 [01:25<05:11,  2.51s/it, loss=0.1413, acc=0.0083, lr=0.000001]Epoch 1:  20%|██        | 31/154 [01:25<05:09,  2.51s/it, loss=0.1413, acc=0.0083, lr=0.000001]Epoch 1:  21%|██        | 32/154 [01:27<05:04,  2.50s/it, loss=0.1413, acc=0.0083, lr=0.000001]Epoch 1:  21%|██▏       | 33/154 [01:29<04:52,  2.42s/it, loss=0.1413, acc=0.0083, lr=0.000001]Epoch 1:  22%|██▏       | 34/154 [01:31<04:39,  2.33s/it, loss=0.1413, acc=0.0083, lr=0.000001]Epoch 1:  23%|██▎       | 35/154 [01:33<04:29,  2.27s/it, loss=0.1413, acc=0.0083, lr=0.000001]Epoch 1:  23%|██▎       | 36/154 [01:36<04:25,  2.25s/it, loss=0.1413, acc=0.0083, lr=0.000001]Epoch 1:  24%|██▍       | 37/154 [01:38<04:19,  2.22s/it, loss=0.1413, acc=0.0083, lr=0.000001]Epoch 1:  25%|██▍       | 38/154 [01:40<04:15,  2.20s/it, loss=0.1413, acc=0.0083, lr=0.000001]Epoch 1:  25%|██▌       | 39/154 [01:42<04:13,  2.21s/it, loss=0.1413, acc=0.0083, lr=0.000001]Epoch 1:  26%|██▌       | 40/154 [01:44<04:12,  2.22s/it, loss=0.1413, acc=0.0083, lr=0.000001]Epoch 1:  26%|██▌       | 40/154 [01:47<04:12,  2.22s/it, loss=0.1405, acc=0.0140, lr=0.000001]Epoch 1:  27%|██▋       | 41/154 [01:47<04:08,  2.20s/it, loss=0.1405, acc=0.0140, lr=0.000001]Epoch 1:  27%|██▋       | 42/154 [01:49<04:07,  2.21s/it, loss=0.1405, acc=0.0140, lr=0.000001]Epoch 1:  28%|██▊       | 43/154 [01:51<04:03,  2.20s/it, loss=0.1405, acc=0.0140, lr=0.000001]Epoch 1:  29%|██▊       | 44/154 [01:53<04:02,  2.20s/it, loss=0.1405, acc=0.0140, lr=0.000001]Epoch 1:  29%|██▉       | 45/154 [01:55<03:56,  2.17s/it, loss=0.1405, acc=0.0140, lr=0.000001]Epoch 1:  30%|██▉       | 46/154 [01:57<03:23,  1.89s/it, loss=0.1405, acc=0.0140, lr=0.000001]Epoch 1:  30%|██▉       | 46/154 [01:57<04:36,  2.56s/it, loss=0.1405, acc=0.0140, lr=0.000001]
+Warning: Fractions don't sum to 1. Range: [nan, nan]
+
+NaN loss detected at batch 45
+Main loss: nan, Smooth loss: nan
+Predictions range: [nan, nan]
+Ground truth range: [0.0, 1.0]
+Traceback (most recent call last):
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/training/vit2_train.py", line 741, in <module>
+    main()
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/training/vit2_train.py", line 704, in main
+    trainer.train()
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/training/vit2_train.py", line 607, in train
+    train_loss, train_metrics = self.train_epoch(epoch)
+                                ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/training/vit2_train.py", line 296, in train_epoch
+    predictions = self.model(sentinel_data)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1511, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1520, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/models/vit_model2_monthly_5.py", line 429, in forward
+    tokens = blk(tokens)
+             ^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1511, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1520, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/models/vit_model2_monthly_5.py", line 191, in forward
+    x = x + self.drop_path(self.mlp(self.norm2(x)))
+                           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1511, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1520, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/models/vit_model2_monthly_5.py", line 110, in forward
+    x = self.act(x) # (n_samples, n_patches + 1, hidden_features)
+        ^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1511, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1520, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/nn/modules/activation.py", line 682, in forward
+    return F.gelu(input, approximate=self.approximate)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+torch.cuda.OutOfMemoryError: CUDA out of memory. Tried to allocate 20.00 MiB. GPU 0 has a total capacity of 10.90 GiB of which 19.25 MiB is free. Including non-PyTorch memory, this process has 10.88 GiB memory in use. Of the allocated memory 10.54 GiB is allocated by PyTorch, and 155.21 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)

@@ -1,0 +1,78 @@
+Found 3 GPUs!
+GPU 0: NVIDIA GeForce GTX 1080 Ti
+Memory allocated: 0.00 GB
+Memory reserved: 0.00 GB
+GPU 1: NVIDIA GeForce GTX 1080 Ti
+Memory allocated: 0.00 GB
+Memory reserved: 0.00 GB
+GPU 2: NVIDIA GeForce GTX 1080 Ti
+Memory allocated: 0.00 GB
+Memory reserved: 0.00 GB
+
+Batch size per GPU: 12
+Total batch size: 36
+Loaded pretrained weights with message: _IncompatibleKeys(missing_keys=['patch_norm.weight', 'patch_norm.bias', 'temp_embedding.weight', 'temp_proj.weight', 'temp_proj.bias', 'regression_head.0.weight', 'regression_head.0.bias', 'regression_head.1.weight', 'regression_head.1.bias', 'regression_head.4.weight', 'regression_head.4.bias', 'regression_head.7.weight', 'regression_head.7.bias'], unexpected_keys=[])
+
+Initializing Training Dataset (monthly):
+Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/Sentinel_Normalised/Training/monthly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Training/Stacked
+Validating ground truth files...
+
+Validation Results:
+Valid locations: 11269
+Skipped locations: 41
+- missing_gt: 0
+- incomplete_gt_years: 22
+- wrong_gt_shape: 19
+- missing_sentinel: 0
+- incomplete_sentinel: 0
+- wrong_sentinel_shape: 0
+Validating Sentinel data for monthly mode...
+Found 207310 valid pairs for monthly mode
+
+Found 207310 complete location-time pairs
+Found 207310 unique location-time pairs for monthly training data
+
+Detailed report saved to: /mnt/guanabana/raid/hdd1/qinxu/Python/LCF-ViT/data/results/dataset_report_monthly.txt
+
+Initializing Val_set Dataset (monthly):
+Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/Sentinel_Normalised/Val_set/monthly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Val_set
+Validating ground truth files...
+
+Validation Results:
+Valid locations: 2087
+Skipped locations: 0
+- missing_gt: 0
+- incomplete_gt_years: 0
+- wrong_gt_shape: 0
+- missing_sentinel: 0
+- incomplete_sentinel: 0
+- wrong_sentinel_shape: 0
+Validating Sentinel data for monthly mode...
+Found 87487 valid pairs for monthly mode
+
+Found 87487 complete location-time pairs
+Found 87487 unique location-time pairs for monthly training data
+
+Detailed report saved to: /mnt/guanabana/raid/hdd1/qinxu/Python/LCF-ViT/data/results/dataset_report_monthly.txt
+Using 3 GPUs!
+
+Starting training for 50 epochs...
+
+Epoch 1/50
+Epoch 1:   0%|          | 0/5758 [00:00<?, ?it/s]/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/nn/modules/module.py:1511: UserWarning: Implicit dimension choice for softmax has been deprecated. Change the call to include dim=X as an argument.
+  return self._call_impl(*args, **kwargs)
+Epoch 1:   0%|          | 0/5758 [00:07<?, ?it/s]
+Traceback (most recent call last):
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/training/vit1_train.py", line 587, in <module>
+    main()
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/training/vit1_train.py", line 550, in main
+    trainer.train()
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/training/vit1_train.py", line 453, in train
+    train_loss, train_metrics = self.train_epoch(epoch)
+                                ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/training/vit1_train.py", line 314, in train_epoch
+    running_r2_nums[class_idx] += torch.sum((y_true - y_pred)**2)
+                                             ~~~~~~~^~~~~~~~
+RuntimeError: The size of tensor a (900) must match the size of tensor b (37800) at non-singleton dimension 0

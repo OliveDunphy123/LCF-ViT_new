@@ -1,0 +1,15 @@
+Found 2 GPUs!
+GPU 0: NVIDIA GeForce GTX 1080 Ti
+Memory allocated: 0.00 GB
+Memory reserved: 0.00 GB
+GPU 1: NVIDIA GeForce GTX 1080 Ti
+Memory allocated: 0.00 GB
+Memory reserved: 0.00 GB
+Loaded pretrained weights with message: _IncompatibleKeys(missing_keys=['patch_norm.weight', 'patch_norm.bias', 'temp_embedding.weight', 'temp_proj.weight', 'temp_proj.bias', 'regression_head.0.weight', 'regression_head.0.bias', 'regression_head.1.weight', 'regression_head.1.bias', 'regression_head.4.weight', 'regression_head.4.bias', 'regression_head.7.weight', 'regression_head.7.bias'], unexpected_keys=[])
+Traceback (most recent call last):
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/training/vit1_train.py", line 583, in <module>
+    main()
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/training/vit1_train.py", line 522, in main
+    train_loader = create_monthly_15_dataloader(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: create_monthly_15_dataloader() got an unexpected keyword argument 'prefetch_factor'

@@ -13,22 +13,47 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from models.vit_model1_monthly_15 import create_model
-from data.my_dataset import create_training_dataloaders
+from data.my_whole_dataset import create_monthly_15_dataloader
 
 def calculate_accuracy_metrics(predictions, ground_truth):
+    """
+    Calculate accuracy metrics accounting for monthly predictions and yearly ground truth.
+    Args:
+        predictions: shape [B, 7, 42, 5, 5]
+        ground_truth: shape [B, 7, 42, 5, 5]
+    """
+    if predictions.device != ground_truth.device:
+        ground_truth = ground_truth.to(predictions.device)
+    # Now both tensors have same shape, we can calculate metrics directly
     mae_per_class = torch.mean(torch.abs(predictions - ground_truth), dim=(0,2,3,4))
     rmse_per_class = torch.sqrt(torch.mean((predictions - ground_truth)**2, dim=(0,2,3,4)))
-    tolerance = 0.1
-    correct_predictions = torch.abs(predictions - ground_truth) <= tolerance
-    overall_accuracy = torch.mean(correct_predictions.float())
     
+    # Calculate accuracy
+    tolerance = 0.05
+    correct_predictions = torch.abs(predictions - ground_truth) <= tolerance
+    total_elements = correct_predictions.numel()
+    
+    if total_elements == 0:
+        overall_accuracy = torch.tensor(0.0, device=predictions.device)
+    else:
+        overall_accuracy = correct_predictions.float().sum() / total_elements
+    
+    # Calculate R² scores
     r2_scores = []
     for class_idx in range(7):
         y_true = ground_truth[:,class_idx].flatten()
         y_pred = predictions[:,class_idx].flatten()
+
         ss_tot = torch.sum((y_true - torch.mean(y_true))**2)
         ss_res = torch.sum((y_true - y_pred)**2)
-        r2 = 1 - (ss_res / (ss_tot + 1e-8))
+
+
+        # Handle zero division case
+        if ss_tot == 0:
+            r2 = torch.tensor(0.0, device=predictions.device)
+        else:
+            r2 = 1 - (ss_res / ss_tot)
+
         r2_scores.append(r2.item())
     
     return {
@@ -38,31 +63,6 @@ def calculate_accuracy_metrics(predictions, ground_truth):
         'r2_scores': r2_scores
     }
 
-def split_by_location(dataset, train_ratio=0.85):
-    """Split dataset by unique locations."""
-    # Get all unique location IDs
-    location_ids = set()
-    for item in dataset.unique_ids:
-        loc_id = item.split('_')[0]
-        location_ids.add(loc_id)
-    location_ids = sorted(list(location_ids))
-    
-    # Randomly split locations
-    num_train = int(len(location_ids) * train_ratio)
-    train_locations = set(random.sample(location_ids, num_train))
-    
-    # Create indices for train and validation
-    train_indices = []
-    val_indices = []
-    
-    for idx, item in enumerate(dataset.unique_ids):
-        loc_id = item.split('_')[0]
-        if loc_id in train_locations:
-            train_indices.append(idx)
-        else:
-            val_indices.append(idx)
-    
-    return train_indices, val_indices
 
 class ViTTrainer:
     def __init__(
@@ -70,17 +70,25 @@ class ViTTrainer:
         model,
         train_loader,
         val_loader=None,
-        learning_rate=1e-4,
-        weight_decay=1e-4,
+        learning_rate=5e-5, #1e-4 before
+        weight_decay=1e-2,
         device='cuda',
         num_epochs=50,
         criterion=None,
         scheduler_type='onecycle'
     ):
+        self.device = device
+        # Wrap model in DataParallel if multiple GPUs are available
+        if torch.cuda.device_count() > 1:
+            print(f"Using {torch.cuda.device_count()} GPUs!")
+            self.model = nn.DataParallel(model)
+        else:
+            self.model = model
+
         self.model = model.to(device)
+
         self.train_loader = train_loader
         self.val_loader = val_loader
-        self.device = device
         self.num_epochs = num_epochs
         self.custom_criterion = criterion
         
@@ -88,7 +96,10 @@ class ViTTrainer:
         self.results_dir = Path(f"vit_monthly_results_{self.timestamp}")
         self.results_dir.mkdir(exist_ok=True)
         self.writer = SummaryWriter(self.results_dir / 'tensorboard')
-        
+        print(f"\nTensorBoard logs will be saved to: {self.results_dir / 'tensorboard'}")
+        print(f"To view logs, run:\ntensorboard --logdir={self.results_dir / 'tensorboard'}")
+
+
         # Add TensorBoard custom scalar groups
         self.writer.add_custom_scalars({
             'Loss': {
@@ -118,18 +129,31 @@ class ViTTrainer:
                 'R2': ['Multiline', [f'Train/r2_class_{i}' for i in range(7)]]
             }
         })
+        # Add gradient scaler for mixed precision training
+        self.scaler = torch.cuda.amp.GradScaler()
+
         if criterion is None:
             self.mse_loss = nn.MSELoss()
             self.l1_loss = nn.L1Loss()
         
+
+        # Modify parameter groups to work with DataParallel
+        if hasattr(self.model, 'module'):
+            model_for_params = self.model.module
+        else:
+            model_for_params = self.model
+
         para_groups = [
-            {'params': model.patch_embed.parameters(), 'lr': learning_rate * 0.2},
-            {'params': model.blocks.parameters(), 'lr': learning_rate * 1.5},
-            {'params': model.temp_embedding.parameters(), 'lr': learning_rate * 5},
-            {'params': model.temp_proj.parameters(), 'lr': learning_rate * 5},
-            {'params': model.regression_head.parameters(), 'lr': learning_rate * 10},
+            {'params': model_for_params.patch_embed.parameters(), 'lr': learning_rate * 0.2},
+            {'params': model_for_params.blocks.parameters(), 'lr': learning_rate * 1.5},
+            {'params': model_for_params.temp_embedding.parameters(), 'lr': learning_rate * 5},
+            {'params': model_for_params.temp_proj.parameters(), 'lr': learning_rate * 5},
+            {'params': model_for_params.regression_head.parameters(), 'lr': learning_rate * 10},
         ]
         self.optimizer = optim.AdamW(para_groups, weight_decay=weight_decay)
+
+        # Enable automatic mixed precision
+        self.scaler = torch.cuda.amp.GradScaler()
 
         total_steps = len(train_loader) * num_epochs
         max_lrs = [group['lr'] for group in para_groups]
@@ -146,87 +170,147 @@ class ViTTrainer:
             )
 
     def criterion(self, pred, target):
+        """
+        Custom loss function to handle temporal dimension mismatch.
+        
+        Args:
+            pred: Model predictions with shape [B, 7, 42, 5, 5]
+            target: Ground truth with shape [B, 7, 42, 5, 5]
+        """
+        # print(f"Prediction shape: {pred.shape}")
+        # print(f"Target shape: {target.shape}")
+
         if self.custom_criterion is not None:
             return self.custom_criterion(pred, target)
+
         mse = self.mse_loss(pred, target)
         l1 = self.l1_loss(pred, target)
-        return 0.7 * mse + 0.3 * l1
+
+        # Combine losses with weighting
+        total_loss = 0.7 * mse + 0.3 * l1
+
+        return total_loss 
 
     def temporal_smoothness_loss(self, pred):
-        temp_diff = pred[:, :, 1:] - pred[:, :, :-1]
-        return torch.mean(torch.abs(temp_diff))
-
+        """
+        Calculate temporal smoothness loss for monthly predictions.
+        
+        Args:
+            pred: Model predictions with shape [B, 7, 42, 5, 5]
+        """
+        # No need to handle year boundaries since we have continuous monthly data
+        # Just calculate temporal differences between consecutive months
+        temp_diff = pred[:, :, 1:] - pred[:, :, :-1]  # Difference between consecutive months
+        smoothness_loss = torch.mean(torch.abs(temp_diff))
+        return smoothness_loss
+        
     def train_epoch(self, epoch):
         self.model.train()
         total_loss = 0
         total_main_loss = 0
         total_smooth_loss = 0
-        epoch_predictions = []
-        epoch_ground_truth = []
+        
+        # Initialize metrics accumulators on device
+        running_mae = torch.zeros(7, device=self.device)
+        running_rmse = torch.zeros(7, device=self.device)
+        running_correct = 0
+        running_total = 0
+        running_r2_nums = torch.zeros(7, device=self.device)
+        running_r2_dens = torch.zeros(7, device=self.device)
 
         progress_bar = tqdm(self.train_loader, desc=f'Epoch {epoch}')
         for batch_idx, batch in enumerate(progress_bar):
-            sentinel_data = batch['sentinel'].to(self.device)
-            ground_truth = batch['ground_truth'].to(self.device)
+            sentinel_data = batch['sentinel'].to(self.device, non_blocking=True)
+            ground_truth = batch['ground_truth'].to(self.device, non_blocking=True)
             
             # Data augmentation
-            noise = torch.randn_like(sentinel_data) * 0.01
+            noise = torch.randn_like(sentinel_data) * 0.005
             sentinel_data = sentinel_data + noise
             
-            self.optimizer.zero_grad()
-            predictions = self.model(sentinel_data)
+            self.optimizer.zero_grad(set_to_none=True)  # More memory efficient than zero_grad()
             
-            main_loss = self.criterion(predictions, ground_truth)
-            smooth_loss = self.temporal_smoothness_loss(predictions)
-            smooth_weight = min(0.5, 0.1 + epoch * 0.01)
-            loss = main_loss + smooth_weight * smooth_loss
+            with torch.cuda.amp.autocast():
+                predictions = self.model(sentinel_data)
+                main_loss = self.criterion(predictions, ground_truth)
+                smooth_loss = self.temporal_smoothness_loss(predictions)
+                smooth_weight = min(0.3, 0.05 + epoch * 0.005)
+                loss = main_loss + smooth_weight * smooth_loss
+                
+                # Check for NaN loss
+                if torch.isnan(loss):
+                    print(f"\nNaN loss detected at batch {batch_idx}")
+                    print(f"Main loss: {main_loss}, Smooth loss: {smooth_loss}")
+                    print(f"Predictions range: [{predictions.min()}, {predictions.max()}]")
+                    print(f"Ground truth range: [{ground_truth.min()}, {ground_truth.max()}]")
+                    continue  # Skip this batch
             
-            loss.backward()
+            # Scale loss and backward pass
+            self.scaler.scale(loss).backward()
+            
+            # Unscale before clip_grad_norm
+            self.scaler.unscale_(self.optimizer)
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
-            self.optimizer.step()
+            
+            self.scaler.step(self.optimizer)
+            self.scaler.update()
             self.scheduler.step()
             
-            epoch_predictions.append(predictions.detach())
-            epoch_ground_truth.append(ground_truth.detach())
-            
+            # Calculate metrics on CPU to save GPU memory
+            with torch.no_grad():
+                metrics = calculate_accuracy_metrics(predictions.detach().cpu(), ground_truth.cpu())
+                
+                # Update running metrics
+                running_mae += metrics['mae_per_class'].to(self.device)
+                running_rmse += metrics['rmse_per_class'].to(self.device)
+                
+                # Only update if we have valid predictions
+                if metrics['overall_accuracy'] > 0:
+                    running_correct += metrics['overall_accuracy'] * predictions.numel()
+                    running_total += predictions.numel()
+
             total_loss += loss.item()
             total_main_loss += main_loss.item()
             total_smooth_loss += smooth_loss.item()
             
-            global_step = (epoch - 1) * len(self.train_loader) + batch_idx
-            self.writer.add_scalar('Batch/loss', loss.item(), global_step)
-            self.writer.add_scalar('Batch/main_loss', main_loss.item(), global_step)
-            self.writer.add_scalar('Batch/smooth_loss', smooth_loss.item(), global_step)
-            self.writer.add_scalar('LR/learning_rate', self.scheduler.get_last_lr()[0], global_step)
-            # self.writer.add_scalar('Train/total_loss', avg_loss, epoch)
-            # self.writer.add_scalar('Train/main_loss', total_main_loss / len(self.train_loader), epoch)
-            # self.writer.add_scalar('Train/smooth_loss', total_smooth_loss / len(self.train_loader), epoch)
-            # self.writer.add_scalar('Train/mae_avg', torch.mean(metrics['mae_per_class']), epoch)
+            # Clear memory
+            del predictions, loss, main_loss, smooth_loss, sentinel_data, ground_truth, noise
+            torch.cuda.empty_cache()
+            
+            # Update progress bar less frequently to reduce overhead
+            if batch_idx % 10 == 0:
+                current_accuracy = (running_correct / running_total) if running_total > 0 else 0
+                progress_bar.set_postfix({
+                    'loss': f'{total_loss / (batch_idx + 1):.4f}',
+                    'acc': f'{current_accuracy:.4f}',
+                    'lr': f'{self.scheduler.get_last_lr()[0]:.6f}'
+                })
 
-            progress_bar.set_postfix({
-                'loss': f'{loss.item():.4f}',
-                'main_loss': f'{main_loss.item():.4f}',
-                'smooth_loss': f'{smooth_loss.item():.4f}',
-                'lr': f'{self.scheduler.get_last_lr()[0]:.6f}'
-            })
-
-        epoch_predictions = torch.cat(epoch_predictions, dim=0)
-        epoch_ground_truth = torch.cat(epoch_ground_truth, dim=0)
-        metrics = calculate_accuracy_metrics(epoch_predictions, epoch_ground_truth)
+        # Calculate final metrics
+        n_batches = len(self.train_loader)
+        avg_loss = total_loss / n_batches
         
-        self.writer.add_scalar('Train/overall_accuracy', metrics['overall_accuracy'], epoch)
-        for i, mae in enumerate(metrics['mae_per_class']):
-            self.writer.add_scalar(f'Train/mae_class_{i}', mae, epoch)
-        for i, r2 in enumerate(metrics['r2_scores']):
-            self.writer.add_scalar(f'Train/r2_class_{i}', r2, epoch)
+        if running_total == 0:
+            print("\nWarning: No valid predictions in this epoch")
+            overall_accuracy = 0.0
+        else:
+            overall_accuracy = running_correct / running_total
         
-        avg_loss = total_loss / len(self.train_loader)
+        metrics = {
+            'mae_per_class': running_mae.cpu() / n_batches,
+            'rmse_per_class': running_rmse.cpu() / n_batches,
+            'overall_accuracy': overall_accuracy,
+            'r2_scores': metrics['r2_scores']  # Keep the last batch's R² scores
+        }
+        
+        # Print epoch metrics
         print(f"\nEpoch {epoch} Training Metrics:")
-        print(f"Overall Accuracy: {metrics['overall_accuracy']:.4f}")
+        print(f"Average Loss: {avg_loss:.4f}")
+        print(f"Overall Accuracy: {overall_accuracy:.4f}")
         print("MAE per class:", ' '.join(f"{mae:.4f}" for mae in metrics['mae_per_class']))
         print("R² scores:", ' '.join(f"{r2:.4f}" for r2 in metrics['r2_scores']))
-        
+
         return avg_loss, metrics
+
 
     def validate(self, epoch):
         if self.val_loader is None or len(self.val_loader) == 0:
@@ -307,7 +391,6 @@ class ViTTrainer:
         self.writer.close()
 
 
-
     def save_checkpoint(self, epoch, metrics, is_best=False):
         checkpoint = {
             'epoch': epoch,
@@ -324,8 +407,6 @@ class ViTTrainer:
             best_model_path = self.results_dir / 'best_model.pth'
             torch.save(checkpoint, best_model_path)
 
-
-
 def main():
     # Initialize CUDA and clear cache
     if torch.cuda.is_available():
@@ -335,30 +416,37 @@ def main():
     torch.manual_seed(42)
     np.random.seed(42)
     
+
+     # Print GPU info
+    if torch.cuda.is_available():
+        print(f"Found {torch.cuda.device_count()} GPUs!")
+        for i in range(torch.cuda.device_count()):
+            print(f"GPU {i}: {torch.cuda.get_device_name(i)}")
+            print(f"Memory allocated: {torch.cuda.memory_allocated(i) / 1e9:.2f} GB")
+            print(f"Memory reserved: {torch.cuda.memory_reserved(i) / 1e9:.2f} GB")
+    
+    # Set batch size based on number of GPUs
+    per_gpu_batch_size = 4
+    num_gpus = torch.cuda.device_count()
+    total_batch_size = per_gpu_batch_size * num_gpus
+    print(f"\nBatch size per GPU: {per_gpu_batch_size}")
+    print(f"Total batch size: {total_batch_size}")
+
     model = create_model()
-    monthly_loader, _ = create_training_dataloaders(
+    train_loader = create_monthly_15_dataloader(
         base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart",
-        batch_size=32
+        split="Training",
+        batch_size=total_batch_size,
+        num_workers=8,
+        # prefetch_factor=2
     )
     
-    train_indices, val_indices = split_by_location(monthly_loader.dataset)
-    train_dataset = Subset(monthly_loader.dataset, train_indices)
-    val_dataset = Subset(monthly_loader.dataset, val_indices)
-    
-    train_loader = DataLoader(
-        train_dataset,
-        batch_size=32,
-        shuffle=True,
-        num_workers=4,
-        pin_memory=True
-    )
-    
-    val_loader = DataLoader(
-        val_dataset,
-        batch_size=32,
-        shuffle=False,
-        num_workers=4,
-        pin_memory=True
+    val_loader = create_monthly_15_dataloader(
+        base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart", 
+        split="Val_set",
+        batch_size=total_batch_size,
+        num_workers=8,
+        # prefetch_factor=2
     )
     
     trainer = ViTTrainer(

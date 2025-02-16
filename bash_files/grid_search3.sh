@@ -1,0 +1,16 @@
+#!/bin/bash
+#SBATCH --partition=all
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --gres=gpu:gtx_1080_ti:3
+#SBATCH --mem=32000M
+
+export NUMEXPR_MAX_THREADS=8
+export CUDA_VISIBLE_DEVICES="2,3,1"  # Explicitly set GPU order
+
+cd /mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/utils
+
+source activate $HOME/land_cover_fraction
+
+python "grid_search3.py"
+
