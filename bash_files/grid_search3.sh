@@ -5,9 +5,11 @@
 #SBATCH --gres=gpu:3
 #SBATCH --mem=32000M
 
-# Add pip and local packages to PATH
-export PATH="$HOME/.local/bin:$PATH"
-export PYTHONPATH="$HOME/.local/lib/python3.8/site-packages:$PYTHONPATH"
+# Initialize micromamba
+eval "$(micromamba shell hook --shell bash)"
+
+# Activate the environment
+micromamba activate land_cover_fraction
 
 # Add your project root to PYTHONPATH
 export PYTHONPATH="/lustre/scratch/WUR/ESG/xu116/LCF-ViT_new:$PYTHONPATH"
@@ -25,3 +27,6 @@ echo "PYTHONPATH: $PYTHONPATH"
 ls -l ../models/
 
 python "grid_search3.py"
+
+# Deactivate environment at the end
+micromamba deactivate
