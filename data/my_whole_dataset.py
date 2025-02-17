@@ -1,3 +1,6 @@
+"Load complete temporal sequences for each location from stacked files"
+
+
 import torch
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
@@ -292,8 +295,8 @@ def create_monthly_5_dataloader(base_path, split="Training", batch_size=4, num_w
     return create_dataloader(base_path, split, "monthly", "crop", batch_size, num_workers, debug)
 
 if __name__ == "__main__":
-    base_path = "/mnt/guanabana/raid/shared/dropbox/QinLennart"
-    
+    #base_path = "/mnt/guanabana/raid/shared/dropbox/QinLennart"
+    base_path = "/lustre/scratch/WUR/ESG/xu116"
     try:
         # Test all configurations
         loaders = {

@@ -136,13 +136,15 @@ def run_grid_search():
         try:
             # Create data loaders
             train_loader = create_yearly_15_dataloader(
-                base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart",
+                #base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart",
+                base_path="/lustre/scratch/WUR/ESG/xu116",
                 split="Training",
                 batch_size=params['batch_size']
             )
             
             val_loader = create_yearly_15_dataloader(
-                base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart",
+                #base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart",
+                base_path="/lustre/scratch/WUR/ESG/xu116",
                 split="Val_set",
                 batch_size=params['batch_size']
             )
