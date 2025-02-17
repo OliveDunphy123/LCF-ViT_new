@@ -5,23 +5,13 @@
 #SBATCH --gres=gpu:3
 #SBATCH --mem=32000M
 
-# Print initial state
-echo "Initial PATH: $PATH"
-echo "Initial PYTHONPATH: $PYTHONPATH"
-
-# Source micromamba initialization with correct path
+# Initialize micromamba
 export MAMBA_ROOT_PREFIX=/lustre/scratch/WUR/ESG/xu116/micromamba
-eval "$(/lustre/scratch/WUR/ESG/xu116/micromamba/micromamba shell hook --shell=bash)"
+source $MAMBA_ROOT_PREFIX/etc/profile.d/micromamba.sh
 
-# Activate the environment with correct path
-/lustre/scratch/WUR/ESG/xu116/micromamba/micromamba activate land_cover_fraction
-
-
-# Print environment state after activation
-echo "Python location: $(which python)"
-echo "Python version: $(python --version)"
-echo "Updated PATH: $PATH"
-echo "Updated PYTHONPATH: $PYTHONPATH"
+# Initialize shell and activate environment
+micromamba shell init --shell=bash --root-prefix=$MAMBA_ROOT_PREFIX
+micromamba activate land_cover_fraction
 
 # Add your project root to PYTHONPATH
 export PYTHONPATH="/lustre/scratch/WUR/ESG/xu116/LCF-ViT_new:$PYTHONPATH"
@@ -33,12 +23,11 @@ module load cuDNN/8.7.0.84-CUDA-11.8.0
 
 cd /lustre/scratch/WUR/ESG/xu116/LCF-ViT_new/utils
 
-# Verify torch and tensorboard are available
-python -c "import torch, tensorboard; print(f'PyTorch version: {torch.__version__}')" || echo "Failed to import dependencies"
+# Print debug information
+echo "Python location: $(which python)"
+echo "Python version: $(python --version)"
+echo "Torch version and CUDA status:"
+python -c "import torch; print(f'PyTorch version: {torch.__version__}'); print(f'CUDA available: {torch.cuda.is_available()}')"
 
 # Run your script
 python "grid_search3.py"
-
-# Deactivate environment at the end
-/lustre/scratch/WUR/ESG/xu116/micromamba/micromamba deactivate
-
