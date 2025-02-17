@@ -5,12 +5,13 @@
 #SBATCH --gres=gpu:3
 #SBATCH --mem=32000M
 
-export NUMEXPR_MAX_THREADS=8
-export MAMBA_ROOT_PREFIX="/lustre/scratch/WUR/ESG/xu116/micromamba"
-export PATH="/lustre/scratch/WUR/ESG/xu116/micromamba:$PATH"
+# Add pip to PATH
+export PATH="$HOME/.local/bin:$PATH"
 
-eval "$(micromamba shell hook -s bash)"
-micromamba activate land_cover_fraction
+# Load CUDA modules
+module load GPU
+module load CUDA/11.8.0
+module load cuDNN/8.7.0.84-CUDA-11.8.0
 
 cd /lustre/scratch/WUR/ESG/xu116/LCF-ViT_new/utils
 
