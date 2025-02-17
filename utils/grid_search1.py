@@ -109,11 +109,11 @@ def run_grid_search():
     estimated_time_per_config = 20  # minutes
     total_estimated_time = num_combinations * estimated_time_per_config
     print(f"Estimated total time: {total_estimated_time//60} hours {total_estimated_time%60} minutes")
-    user_input = input("Do you want to continue? (y/n): ")
+    # user_input = input("Do you want to continue? (y/n): ")
     
-    if user_input.lower() != 'y':
-        print("Grid search cancelled by user")
-        return
+    # if user_input.lower() != 'y':
+    #     print("Grid search cancelled by user")
+    #     return
 
     # Save parameter grid
     with open(results_dir / 'param_grid.json', 'w') as f:

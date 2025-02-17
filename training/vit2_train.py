@@ -702,40 +702,6 @@ def main():
     )
     
     trainer.train()
-    # monthly_loader, _ = create_training_dataloaders(
-    #     base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart",
-    #     batch_size=32
-    # )
-    
-    # train_indices, val_indices = split_by_location(monthly_loader.dataset)
-    # train_dataset = Subset(monthly_loader.dataset, train_indices)
-    # val_dataset = Subset(monthly_loader.dataset, val_indices)
-    
-    # train_loader = DataLoader(
-    #     train_dataset,
-    #     batch_size=32,
-    #     shuffle=True,
-    #     num_workers=4,
-    #     pin_memory=True
-    # )
-    
-    # val_loader = DataLoader(
-    #     val_dataset,
-    #     batch_size=32,
-    #     shuffle=False,
-    #     num_workers=4,
-    #     pin_memory=True
-    # )
-    
-    # trainer = ViTTrainer(
-    #     model=model,
-    #     train_loader=train_loader,
-    #     val_loader=val_loader,
-    #     device=device,
-    #     num_epochs=50
-    # )
-    
-    # trainer.train()
 
 if __name__ == "__main__":
     main()

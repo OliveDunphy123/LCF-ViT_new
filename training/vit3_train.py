@@ -121,7 +121,7 @@ class ViTTrainer:
         train_loader,
         val_loader=None,
         learning_rate=1e-4,
-        weight_decay=1e-4,
+        weight_decay=1e-2,
         device='cuda',
         num_epochs=50,
         criterion=None,
@@ -251,7 +251,7 @@ class ViTTrainer:
             ground_truth = batch['ground_truth'].to(self.device)
             
             # Add noise augmentation
-            noise = torch.randn_like(sentinel_data) * 0.01
+            noise = torch.randn_like(sentinel_data) * 0.005
             sentinel_data = sentinel_data + noise
 
             self.optimizer.zero_grad()
@@ -260,7 +260,7 @@ class ViTTrainer:
             # Calculate losses
             main_loss = self.criterion(predictions, ground_truth)
             smooth_loss = self.temporal_smoothness_loss(predictions)
-            smooth_weight = min(0.5, 0.1+epoch * 0.01)
+            smooth_weight = min(0.3, 0.05+epoch * 0.005)
             loss = main_loss + smooth_weight * smooth_loss
             
             loss.backward()
@@ -343,7 +343,7 @@ class ViTTrainer:
     def validate(self, epoch):
         """Validation step"""
         if self.val_loader is None or len(self.val_loader) ==0:
-            return None, None
+            return None, None, None, None
             
         self.model.eval()
         total_loss = 0
@@ -352,8 +352,10 @@ class ViTTrainer:
         all_predictions = []
         all_ground_truth = []
 
+        print(f"\rEpoch {epoch} - Validating...", end="")
+
         with torch.no_grad():
-            for batch in self.val_loader:
+            for batch_idx, batch in self.val_loader:
                 sentinel_data = batch['sentinel'].to(self.device)
                 ground_truth = batch['ground_truth'].to(self.device)
                 
@@ -361,7 +363,8 @@ class ViTTrainer:
                 
                 main_loss = self.criterion(predictions, ground_truth)
                 smooth_loss = self.temporal_smoothness_loss(predictions)
-                loss = main_loss + 0.1 * smooth_loss
+                smooth_weight = min(0.3, 0.05 + epoch * 0.005)  # Match training smooth weight
+                loss = main_loss + smooth_weight * smooth_loss
                 
                 total_loss += loss.item()
                 total_main_loss += main_loss.item()
@@ -370,14 +373,28 @@ class ViTTrainer:
                 # Store predictions and ground truth
                 all_predictions.append(predictions.cpu())
                 all_ground_truth.append(ground_truth.cpu())
+
+                # Log batch-level validation metrics
+                global_step = (epoch - 1) * len(self.val_loader) + batch_idx
+                self.writer.add_scalar('Val_Batch/loss', loss.item(), global_step)
+                self.writer.add_scalar('Val_Batch/main_loss', main_loss.item(), global_step)
+                self.writer.add_scalar('Val_Batch/smooth_loss', smooth_loss.item(), global_step)
         
         # Calculate validation metrics
         epoch_predictions = torch.cat(all_predictions, dim=0)
         epoch_ground_truth = torch.cat(all_ground_truth, dim=0)
         metrics = calculate_accuracy_metrics(epoch_predictions, epoch_ground_truth)
         
+        n_batches = len(self.val_loader)
+        avg_loss = total_loss / n_batches
+        avg_main_loss = total_main_loss / n_batches
+        avg_smooth_loss = total_smooth_loss / n_batches
+
         # Log validation metrics
-        self.writer.add_scalar('Val/loss', total_loss / len(self.val_loader), epoch)
+        self.writer.add_scalar('Loss/val_total', avg_loss, epoch)
+        self.writer.add_scalar('Loss/val_main', avg_main_loss, epoch)
+        self.writer.add_scalar('Loss/val_smooth', avg_smooth_loss, epoch)
+        
         self.writer.add_scalar('Val/overall_accuracy', metrics['overall_accuracy'], epoch)
         self.writer.add_scalar('Val/overall_r2', metrics['overall_r2'], epoch)
         self.writer.add_scalar('Val/overall_mae', metrics['overall_mae'], epoch)
@@ -388,14 +405,6 @@ class ViTTrainer:
         for i, r2 in enumerate(metrics['r2_scores']):
             self.writer.add_scalar(f'Val/r2_class_{i}', r2, epoch)
 
-        avg_loss = total_loss / len(self.val_loader)
-        avg_main_loss = total_main_loss / len(self.val_loader)
-        avg_smooth_loss = total_smooth_loss / len(self.val_loader)
-        
-        # Log validation metrics
-        self.writer.add_scalar('Loss/val_total', avg_loss, epoch)
-        self.writer.add_scalar('Loss/val_main', avg_main_loss, epoch)
-        self.writer.add_scalar('Loss/val_smooth', avg_smooth_loss, epoch)
 
         # print(f"\nEpoch {epoch} Validation Metrics:")
         # print(f"Loss: {avg_loss:.4f} (Main: {avg_main_loss:.4f}, Smooth: {avg_smooth_loss:.4f})")
@@ -435,20 +444,6 @@ class ViTTrainer:
             best_model_path = self.results_dir / 'best_model.pth'
             torch.save(checkpoint, best_model_path)
             print(f"Saved best model with loss: {train_loss:.4f}")
-
-    # def plot_training_curves(self, train_losses, val_losses, save_path):
-    #     import matplotlib.pyplot as plt
-        
-    #     plt.figure(figsize=(10, 6))
-    #     plt.plot(train_losses, label='Training Loss')
-    #     plt.plot(val_losses, label='Validation Loss')
-    #     plt.xlabel('Epoch')
-    #     plt.ylabel('Loss')
-    #     plt.title('Training and Validation Losses')
-    #     plt.legend()
-    #     plt.grid(True)
-    #     plt.savefig(save_path)
-    #     plt.close()
 
     def train(self):
         """Main training loop"""
@@ -512,13 +507,13 @@ def main():
     train_loader = create_yearly_15_dataloader(
         base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart",
         split="Training",
-        batch_size=16
+        batch_size=12
     )
     
     val_loader = create_yearly_15_dataloader(
         base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart", 
         split="Val_set",
-        batch_size=16
+        batch_size=12
     )
     
     trainer = ViTTrainer(

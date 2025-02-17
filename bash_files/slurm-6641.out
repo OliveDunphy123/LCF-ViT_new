@@ -1,0 +1,111 @@
+Found 3 GPUs!
+GPU 0: NVIDIA GeForce GTX 1080 Ti
+Memory allocated: 0.00 GB
+Memory reserved: 0.00 GB
+GPU 1: NVIDIA GeForce GTX 1080 Ti
+Memory allocated: 0.00 GB
+Memory reserved: 0.00 GB
+GPU 2: NVIDIA GeForce GTX 1080 Ti
+Memory allocated: 0.00 GB
+Memory reserved: 0.00 GB
+
+Batch size per GPU: 4
+Total batch size: 12
+Loaded pretrained weights with message: _IncompatibleKeys(missing_keys=['patch_norm.weight', 'patch_norm.bias', 'temp_embedding.weight', 'temp_proj.weight', 'temp_proj.bias', 'regression_head.0.weight', 'regression_head.0.bias', 'regression_head.1.weight', 'regression_head.1.bias', 'regression_head.4.weight', 'regression_head.4.bias', 'regression_head.7.weight', 'regression_head.7.bias'], unexpected_keys=[])
+
+Initializing Training Dataset (monthly):
+Stacked Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/Stacked_Sentinel/Training/monthly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Training/Stacked
+
+Validating data...
+
+Validation Results:
+Valid locations: 4934
+Skipped locations: 6376
+Temporal dimension range: 42 to 42 months
+Found 4934 valid locations with complete data
+
+DataLoader Configuration:
+Mode: monthly, Resolution: full
+Dataset size: 4934 locations
+Batch size: 12 locations
+Number of workers: 8
+Expected iterations per epoch: 411
+
+Initializing Val_set Dataset (monthly):
+Stacked Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/Stacked_Sentinel/Val_set/monthly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Val_set
+
+Validating data...
+
+Validation Results:
+Valid locations: 2087
+Skipped locations: 0
+Temporal dimension range: 42 to 54 months
+Found 2087 valid locations with complete data
+
+DataLoader Configuration:
+Mode: monthly, Resolution: full
+Dataset size: 2087 locations
+Batch size: 12 locations
+Number of workers: 8
+Expected iterations per epoch: 173
+Using 3 GPUs!
+
+TensorBoard logs will be saved to: vit_monthly_results_20250216_234529/tensorboard
+To view logs, run:
+tensorboard --logdir=vit_monthly_results_20250216_234529/tensorboard
+
+Starting training for 50 epochs...
+
+Epoch 1/50
+
+Epoch 1/50
+Traceback (most recent call last):
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/training/vit1_train.py", line 603, in <module>
+    main()
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/training/vit1_train.py", line 600, in main
+    trainer.train()
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/training/vit1_train.py", line 522, in train
+    train_loss, train_main_loss, train_smooth_loss, train_metrics = self.train_epoch(epoch)
+                                                                    ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/training/vit1_train.py", line 267, in train_epoch
+    predictions = self.model(sentinel_data)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1511, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1520, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/models/vit_model1_monthly_15.py", line 421, in forward
+    tokens = blk(tokens)
+             ^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1511, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1520, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/models/vit_model1_monthly_15.py", line 187, in forward
+    y, attn = self.attn(self.norm1(x))
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1511, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1520, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/models/vit_model1_monthly_15.py", line 157, in forward
+    x = self.proj(x)
+        ^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1511, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1520, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/nn/modules/linear.py", line 116, in forward
+    return F.linear(input, self.weight, self.bias)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+torch.cuda.OutOfMemoryError: CUDA out of memory. Tried to allocate 2.00 MiB. GPU 0 has a total capacity of 10.90 GiB of which 3.25 MiB is free. Process 2756359 has 10.50 GiB memory in use. Including non-PyTorch memory, this process has 410.00 MiB memory in use. Of the allocated memory 217.01 MiB is allocated by PyTorch, and 20.99 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)

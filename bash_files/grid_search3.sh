@@ -8,9 +8,9 @@
 export NUMEXPR_MAX_THREADS=8
 export CUDA_VISIBLE_DEVICES="2,3,1"  # Explicitly set GPU order
 
-cd /mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/utils
+cd /mnt/guanabana/raid/hdd1/qinxu/Python/LCF-ViT/utils
 
-source activate $HOME/land_cover_fraction
+source activate /mnt/guanabana/raid/hdd1/qinxu/land_cover_fraction
 
 python "grid_search3.py"
 

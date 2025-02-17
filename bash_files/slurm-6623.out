@@ -1,0 +1,90 @@
+/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/utils/data/dataloader.py:558: UserWarning: This DataLoader will create 8 worker processes in total. Our suggested max number of worker in current system is 4, which is smaller than what this DataLoader is going to create. Please be aware that excessive worker creation might get DataLoader running slow or even freeze, lower the worker number to avoid potential slowness/freeze if necessary.
+  warnings.warn(_create_warning_msg(
+Using device: cuda
+Original patch embedding shape: torch.Size([384, 13, 16, 16])
+Shape after band selection: torch.Size([384, 10, 16, 16])
+Final patch embedding shape: torch.Size([384, 10, 3, 3])
+Original position embedding shape: torch.Size([1, 197, 384])
+Final position embedding shape: torch.Size([1, 26, 384])
+
+Weight Loading Summary:
+Successfully loaded: 148 weights
+Adapted weights: patch_embed.proj.weight, pos_embed
+
+Missing keys:
+  - patch_norm.weight
+  - patch_norm.bias
+  - year_embedding.weight
+  - year_proj.weight
+  - year_proj.bias
+  ... and 14 more
+Loaded pretrained weights with message: _IncompatibleKeys(missing_keys=['patch_norm.weight', 'patch_norm.bias', 'year_embedding.weight', 'year_proj.weight', 'year_proj.bias', 'regression_head.0.weight', 'regression_head.0.bias', 'regression_head.1.weight', 'regression_head.1.bias', 'regression_head.2.weight', 'regression_head.2.bias', 'regression_head.2.running_mean', 'regression_head.2.running_var', 'regression_head.5.weight', 'regression_head.5.bias', 'regression_head.8.weight', 'regression_head.8.bias', 'regression_head.9.weight', 'regression_head.9.bias'], unexpected_keys=[])
+Model created successfully
+
+Initializing Training Dataset (yearly):
+Stacked Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/Stacked_Sentinel/Training/yearly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Training/Stacked
+
+Validating data...
+
+Validation Results:
+Valid locations: 4922
+Skipped locations: 6388
+Found 4922 valid locations with complete data
+
+DataLoader Configuration:
+Mode: yearly, Resolution: full
+Dataset size: 4922 locations
+Batch size: 16 locations
+Number of workers: 8
+Expected iterations per epoch: 307
+
+Initializing Val_set Dataset (yearly):
+Stacked Sentinel data path: /mnt/guanabana/raid/shared/dropbox/QinLennart/Stacked_Sentinel/Val_set/yearly
+Ground truth path: /mnt/guanabana/raid/shared/dropbox/QinLennart/GT_rasters/Val_set
+
+Validating data...
+
+Validation Results:
+Valid locations: 2087
+Skipped locations: 0
+Found 2087 valid locations with complete data
+
+DataLoader Configuration:
+Mode: yearly, Resolution: full
+Dataset size: 2087 locations
+Batch size: 16 locations
+Number of workers: 8
+Expected iterations per epoch: 130
+Initializing ViTTrainer with parameters:
+scheduler_type: onecycle
+criterion: None
+Initialized trainer. Training results will be saved to: vit_yearly_15_results_20250216_202237
+
+Starting training for 50 epochs...
+
+Epoch 1/50
+Epoch 1 - Training.../mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/utils/checkpoint.py:460: UserWarning: torch.utils.checkpoint: please pass in use_reentrant=True or use_reentrant=False explicitly. The default value of use_reentrant will be updated to be False in the future. To maintain current behavior, pass use_reentrant=True. It is recommended that you use use_reentrant=False. Refer to docs for more details on the differences between the two variants.
+  warnings.warn(
+Traceback (most recent call last):
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/training/vit3_train.py", line 535, in <module>
+    main()
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/training/vit3_train.py", line 532, in main
+    trainer.train()
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/training/vit3_train.py", line 465, in train
+    train_loss, train_main_loss, train_smooth_loss, train_metrics = self.train_epoch(epoch)
+                                                                    ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/Python/LCF-ViT/training/vit3_train.py", line 266, in train_epoch
+    loss.backward()
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/_tensor.py", line 522, in backward
+    torch.autograd.backward(
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/autograd/__init__.py", line 266, in backward
+    Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/autograd/function.py", line 289, in apply
+    return user_fn(self, *args)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/utils/checkpoint.py", line 319, in backward
+    torch.autograd.backward(outputs_with_grad, args_with_grad)
+  File "/mnt/guanabana/raid/home/qinxu/land_cover_fraction/lib/python3.12/site-packages/torch/autograd/__init__.py", line 266, in backward
+    Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+torch.cuda.OutOfMemoryError: CUDA out of memory. Tried to allocate 20.00 MiB. GPU 0 has a total capacity of 10.90 GiB of which 13.25 MiB is free. Process 2763127 has 10.50 GiB memory in use. Including non-PyTorch memory, this process has 400.00 MiB memory in use. Of the allocated memory 207.15 MiB is allocated by PyTorch, and 12.85 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
