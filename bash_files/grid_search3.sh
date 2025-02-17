@@ -6,11 +6,10 @@
 #SBATCH --mem=32000M
 
 export NUMEXPR_MAX_THREADS=8
-export CUDA_VISIBLE_DEVICES="2,3,1"  # Explicitly set GPU order
 
-cd /mnt/guanabana/raid/hdd1/qinxu/Python/LCF-ViT/utils
+cd /lustre/scratch/WUR/ESG/xu116/LCF-ViT_new/utils
 
-source activate /mnt/guanabana/raid/hdd1/qinxu/land_cover_fraction
+micromamba activate /lustre/scratch/WUR/ESG/xu116/land_cover_fraction
 
 python "grid_search3.py"
 
