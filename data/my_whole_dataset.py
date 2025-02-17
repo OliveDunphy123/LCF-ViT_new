@@ -261,7 +261,7 @@ def create_dataloader(base_path, split="Training", temporal_mode="monthly",
     wrapped_dataset = DatasetWrapper(dataset, resolution)
     
     # Adjust workers based on system resources
-    num_workers = min(8, os.cpu_count() or 1)  # Cap at 8 due to larger data per item
+    num_workers = min(4, os.cpu_count() or 1)  # Cap at 8 due to larger data per item
     
     print(f"\nDataLoader Configuration:")
     print(f"Mode: {temporal_mode}, Resolution: {resolution}")

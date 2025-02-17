@@ -9,6 +9,6 @@ export NUMEXPR_MAX_THREADS=8
 
 cd /mnt/guanabana/raid/hdd1/qinxu/Python/LCF-ViT
 
-conda activate /mnt/guanabana/raid/hdd1/qinxu/land_cover_fraction
+source activate /mnt/guanabana/raid/hdd1/qinxu/land_cover_fraction
 
 python training/vit1_train.py
