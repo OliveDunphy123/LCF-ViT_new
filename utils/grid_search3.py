@@ -89,47 +89,69 @@ def run_grid_search():
     param_values = [param_grid[name] for name in param_names]
     combinations = list(itertools.product(*param_values))
 
+    # Look for existing checkpoint
+    checkpoint_path = Path("grid_search3_checkpoint")
+    if checkpoint_path.exists():
+        print("Found existing checkpoint. Loading...")
+        checkpoint = torch.load(checkpoint_path)
+        results_dir = Path(checkpoint['results_dir'])
+        completed_configs = checkpoint['completed_configs']
+        best_accuracy = checkpoint.get('best_accuracy',0.0)
+        best_config = checkpoint.get('best_config',None)
+        results = checkpoint['results']
+        start_idx = len(completed_configs)
+        print(f"Resuming from configuration {start_idx + 1}")
+        
+        # Restore TensorBoard writer
+        writer = SummaryWriter(results_dir / 'tensorboard')
+    else:
+
     # Create results directory
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    results_dir = Path(f"grid_search3_results_{timestamp}")
-    results_dir.mkdir(exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        results_dir = Path(f"grid_search3_results_{timestamp}")
+        results_dir.mkdir(exist_ok=True)
     
     # Create directory for model checkpoints
-    (results_dir / 'model_checkpoints').mkdir(exist_ok=True)
+        (results_dir / 'model_checkpoints').mkdir(exist_ok=True)
+        results = []
+        start_idx = 0
+        best_accuracy = 0.0
+        best_config = None
+        writer = SummaryWriter(results_dir / 'tensorboard')
+
+    # # Calculate new storage requirements
+    # num_combinations = len(combinations)
+    # approx_size_per_model = 384  # Approximate size in MB for one model
+    # total_size_gb = (num_combinations * approx_size_per_model) / 1024  # Convert to GB
     
-    # Calculate new storage requirements
-    num_combinations = len(combinations)
-    approx_size_per_model = 384  # Approximate size in MB for one model
-    total_size_gb = (num_combinations * approx_size_per_model) / 1024  # Convert to GB
+    # print(f"\nGrid Search Information:")
+    # print(f"Number of combinations to test: {num_combinations}")
+    # print(f"Using 1/2 of training data and 1/2 of validation data")
+    # print(f"Epochs per configuration: 15")
+    # print(f"Approximate storage required: {total_size_gb:.1f} GB")
+    # estimated_time_per_config = 20  # minutes
+    # total_estimated_time = num_combinations * estimated_time_per_config
+    # print(f"Estimated total time: {total_estimated_time//60} hours {total_estimated_time%60} minutes")
+    # # user_input = input("Do you want to continue? (y/n): ")
     
-    print(f"\nGrid Search Information:")
-    print(f"Number of combinations to test: {num_combinations}")
-    print(f"Using 1/2 of training data and 1/2 of validation data")
-    print(f"Epochs per configuration: 15")
-    print(f"Approximate storage required: {total_size_gb:.1f} GB")
-    estimated_time_per_config = 20  # minutes
-    total_estimated_time = num_combinations * estimated_time_per_config
-    print(f"Estimated total time: {total_estimated_time//60} hours {total_estimated_time%60} minutes")
-    # user_input = input("Do you want to continue? (y/n): ")
-    
-    # if user_input.lower() != 'y':
-    #     print("Grid search cancelled by user")
-    #     return
+    # # if user_input.lower() != 'y':
+    # #     print("Grid search cancelled by user")
+    # #     return
 
     # Save parameter grid
-    with open(results_dir / 'param_grid.json', 'w') as f:
-        json.dump(param_grid, f, indent=4)
+        with open(results_dir / 'param_grid.json', 'w') as f:
+            json.dump(param_grid, f, indent=4)
 
-    # Create TensorBoard writer
-    writer = SummaryWriter(results_dir / 'tensorboard')
+    # # Create TensorBoard writer
+    # writer = SummaryWriter(results_dir / 'tensorboard')
 
-    # Track best configuration
-    best_accuracy = 0.0
-    best_config = None
-    results = []
+    # # Track best configuration
+    # best_accuracy = 0.0
+    # best_config = None
+    # results = []
 
     # Run grid search
-    for i, combination in enumerate(combinations):
+    for i, combination in enumerate(combinations[start_idx:], start=start_idx):
         params = dict(zip(param_names, combination))
         print(f"\nTesting combination {i+1}/{len(combinations)}:")
         print(json.dumps(params, indent=2))
@@ -248,9 +270,29 @@ def run_grid_search():
             # Log to TensorBoard
             writer.add_scalar('GridSearch/accuracy', metrics['overall_accuracy'], i)
             writer.add_scalar('GridSearch/mae_avg', sum(metrics['mae_per_class'])/7, i)
+
+            # Save checkpoint
+            checkpoint = {
+                'results_dir': str(results_dir),
+                'completed_configs': list(range(i + 1)),
+                'results': results,
+                'best_accuracy': best_accuracy,
+                'best_config': best_config
+            }
+            torch.save(checkpoint, checkpoint_path)
+
             
         except Exception as e:
             print(f"Error with combination {i+1}: {str(e)}")
+             # Save checkpoint even if there's an error
+            checkpoint = {
+                'results_dir': str(results_dir),
+                'completed_configs': list(range(i)),  # Note: i instead of i+1
+                'results': results,
+                'best_accuracy': best_accuracy,
+                'best_config': best_config
+            }
+            torch.save(checkpoint, checkpoint_path)
             continue
 
     writer.close()
@@ -317,6 +359,10 @@ def run_grid_search():
     print("\nGrid Search completed!")
     print(f"Results saved in: {results_dir}")
     print("Check 'comparison_report.txt' for detailed results of all configurations")
+
+    # Add this at the end of your function:
+    if checkpoint_path.exists():
+        checkpoint_path.unlink()
 
 if __name__ == "__main__":
     run_grid_search()

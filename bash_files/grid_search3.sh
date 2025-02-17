@@ -4,6 +4,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --gres=gpu:3
 #SBATCH --mem=32000M
+#SBATCH --time=72:00:00  # Added 72-hour time limit
 
 # Initialize micromamba without relying on profile.d
 export MAMBA_ROOT_PREFIX=/lustre/scratch/WUR/ESG/xu116/micromamba
