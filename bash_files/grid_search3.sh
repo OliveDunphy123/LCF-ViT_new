@@ -5,12 +5,14 @@
 #SBATCH --gres=gpu:3
 #SBATCH --mem=32000M
 
-# Initialize micromamba
+# Initialize micromamba without relying on profile.d
 export MAMBA_ROOT_PREFIX=/lustre/scratch/WUR/ESG/xu116/micromamba
-source $MAMBA_ROOT_PREFIX/etc/profile.d/micromamba.sh
+export MAMBA_EXE="/lustre/scratch/WUR/ESG/xu116/micromamba/micromamba"
 
-# Initialize shell and activate environment
-micromamba shell init --shell=bash --root-prefix=$MAMBA_ROOT_PREFIX
+# Direct shell hook evaluation
+eval "$($MAMBA_EXE shell hook --shell bash)"
+
+# Activate environment
 micromamba activate land_cover_fraction
 
 # Add your project root to PYTHONPATH
@@ -26,6 +28,8 @@ cd /lustre/scratch/WUR/ESG/xu116/LCF-ViT_new/utils
 # Print debug information
 echo "Python location: $(which python)"
 echo "Python version: $(python --version)"
+echo "NumPy version:"
+python -c "import numpy; print(f'NumPy version: {numpy.__version__}')"
 echo "Torch version and CUDA status:"
 python -c "import torch; print(f'PyTorch version: {torch.__version__}'); print(f'CUDA available: {torch.cuda.is_available()}')"
 
