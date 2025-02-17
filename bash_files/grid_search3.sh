@@ -7,6 +7,7 @@
 
 # Add pip to PATH
 export PATH="$HOME/.local/bin:$PATH"
+export PYTHONPATH="$HOME/.local/lib/python3.8/site-packages:$PYTHONPATH"
 
 # Load CUDA modules
 module load GPU
