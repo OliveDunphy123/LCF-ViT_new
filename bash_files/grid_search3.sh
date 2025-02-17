@@ -11,10 +11,10 @@ echo "Initial PYTHONPATH: $PYTHONPATH"
 
 # Source micromamba initialization
 export MAMBA_ROOT_PREFIX=/lustre/scratch/WUR/ESG/xu116/micromamba
-eval "$(/lustre/scratch/WUR/ESG/xu116/micromamba/bin/micromamba shell hook --shell=bash)"
+eval "$(/lustre/scratch/WUR/ESG/xu116/micromamba/micromamba/ shell hook --shell=bash)"
 
 # Activate the environment with full path
-/lustre/scratch/WUR/ESG/xu116/micromamba/bin/micromamba activate land_cover_fraction
+/lustre/scratch/WUR/ESG/xu116/micromamba/micromamba activate land_cover_fraction
 
 # Print environment state after activation
 echo "Python location: $(which python)"
