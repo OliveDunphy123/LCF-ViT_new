@@ -32,6 +32,18 @@ class LocationBasedDataset(Dataset):
         self.valid_locations = self._get_valid_locations()
         print(f"Found {len(self.valid_locations)} valid locations with complete data")
         
+        # Verify ground truth data for all valid locations during initialization
+        if self.debug:
+            print("\nVerifying ground truth data for valid locations...")
+            for loc_id in self.valid_locations[:5]:  # Check first 5 locations
+                try:
+                    _ = self._load_ground_truth(loc_id)
+                    print(f"Location {loc_id}: Ground truth loaded successfully")
+                except Exception as e:
+                    print(f"Location {loc_id}: Failed to load ground truth")
+                    print(f"Error: {str(e)}")
+                    raise  # Re-raise the exception to stop initialization
+
     def _get_valid_locations(self):
         """Get list of locations that have complete stacked data"""
         valid_locations = set()
@@ -170,42 +182,106 @@ class LocationBasedDataset(Dataset):
             'full_res': torch.from_numpy(data_array_15).float(),
             'center_crop': torch.from_numpy(data_array_5).float()
         }
-        
     def _load_ground_truth(self, location_id):
         """Load ground truth data for a location"""
         gt_data_list = []
+        shapes = []  # Keep track of shapes for debugging
         valid_data = False
         
-        for i in range(1, 8):
-            gt_file = f"stacked_{location_id}_fraction_{i}.tif"
-            with rasterio.open(os.path.join(self.gt_path, gt_file)) as src:
-                data = src.read()  # [4, H, W] - 4 years of data
+        try:
+            for i in range(1, 8):
+                gt_file = f"stacked_{location_id}_fraction_{i}.tif"
+                gt_path = os.path.join(self.gt_path, gt_file)
                 
-                if self.split in ["Val_set", "Test_set"] and data.shape[0] > 4:
-                    data = data[:4]
+                if not os.path.exists(gt_path):
+                    raise ValueError(f"Ground truth file not found: {gt_file}")
                     
-                if data.shape[1:] != (5, 5):
-                    print(f"Warning: Unexpected GT shape at {gt_file}: {data.shape}")
-                    continue
+                with rasterio.open(gt_path) as src:
+                    data = src.read()  # [4, H, W] - 4 years of data
                     
-                if self.temporal_mode == "monthly":
-                    # Create monthly ground truth by repeating yearly data
-                    year_data = []
-                    # 2015: July-December (6 months)
-                    year_data.extend([data[0:1]] * 6)
-                    # 2016-2018: Jan-December (12 months each)
-                    for year in range(1, 4):
-                        year_data.extend([data[year:year+1]] * 12)
-                    data = np.concatenate(year_data, axis=0)  # [42, 5, 5]
-                
-                gt_data_list.append(data)
-                valid_data = True
-                
-        if not valid_data:
-            raise ValueError(f"No valid ground truth data found for location {location_id}")
+                    if self.split in ["Val_set", "Test_set"] and data.shape[0] > 4:
+                        data = data[:4]
+                    
+                    # Validate spatial dimensions
+                    if data.shape[1:] != (5, 5):
+                        raise ValueError(f"Invalid spatial dimensions in {gt_file}: {data.shape}")
+                    
+                    # For monthly mode, create monthly data
+                    if self.temporal_mode == "monthly":
+                        # Create monthly ground truth by repeating yearly data
+                        year_data = []
+                        # 2015: July-December (6 months)
+                        year_data.extend([data[0:1]] * 6)
+                        # 2016-2018: Jan-December (12 months each)
+                        for year in range(1, 4):
+                            year_data.extend([data[year:year+1]] * 12)
+                        data = np.concatenate(year_data, axis=0)  # [42, 5, 5]
+                    
+                    shapes.append((i, data.shape))  # Store shape for debugging
+                    gt_data_list.append(data)
+                    valid_data = True
             
-        stacked_data = np.stack(gt_data_list, axis=0)  # [7, T, 5, 5] where T=42 for monthly, T=4 for yearly
-        return torch.from_numpy(stacked_data).float()
+            if not valid_data:
+                raise ValueError(f"No valid ground truth data found for location {location_id}")
+            
+            # Verify all arrays have the same shape before stacking
+            first_shape = gt_data_list[0].shape
+            for i, data in enumerate(gt_data_list[1:], 1):
+                if data.shape != first_shape:
+                    shape_info = "\n".join([f"Fraction {idx}: {shape}" for idx, shape in shapes])
+                    raise ValueError(
+                        f"Inconsistent shapes for location {location_id}:\n"
+                        f"Expected shape: {first_shape}\n"
+                        f"Got different shape for fraction {i}: {data.shape}\n"
+                        f"All shapes:\n{shape_info}"
+                    )
+            
+            stacked_data = np.stack(gt_data_list, axis=0)
+            return torch.from_numpy(stacked_data).float()
+            
+        except Exception as e:
+            print(f"\nError loading ground truth for location {location_id}:")
+            print(f"Error message: {str(e)}")
+            print("Shapes of loaded arrays:")
+            for frac_idx, shape in shapes:
+                print(f"Fraction {frac_idx}: {shape}")
+            raise
+
+    # def _load_ground_truth(self, location_id):
+    #     """Load ground truth data for a location"""
+    #     gt_data_list = []
+    #     valid_data = False
+        
+    #     for i in range(1, 8):
+    #         gt_file = f"stacked_{location_id}_fraction_{i}.tif"
+    #         with rasterio.open(os.path.join(self.gt_path, gt_file)) as src:
+    #             data = src.read()  # [4, H, W] - 4 years of data
+                
+    #             if self.split in ["Val_set", "Test_set"] and data.shape[0] > 4:
+    #                 data = data[:4]
+                    
+    #             if data.shape[1:] != (5, 5):
+    #                 print(f"Warning: Unexpected GT shape at {gt_file}: {data.shape}")
+    #                 continue
+                    
+    #             if self.temporal_mode == "monthly":
+    #                 # Create monthly ground truth by repeating yearly data
+    #                 year_data = []
+    #                 # 2015: July-December (6 months)
+    #                 year_data.extend([data[0:1]] * 6)
+    #                 # 2016-2018: Jan-December (12 months each)
+    #                 for year in range(1, 4):
+    #                     year_data.extend([data[year:year+1]] * 12)
+    #                 data = np.concatenate(year_data, axis=0)  # [42, 5, 5]
+                
+    #             gt_data_list.append(data)
+    #             valid_data = True
+                
+    #     if not valid_data:
+    #         raise ValueError(f"No valid ground truth data found for location {location_id}")
+            
+    #     stacked_data = np.stack(gt_data_list, axis=0)  # [7, T, 5, 5] where T=42 for monthly, T=4 for yearly
+    #     return torch.from_numpy(stacked_data).float()
         
     def __len__(self):
         return len(self.valid_locations)
@@ -268,7 +344,7 @@ def create_dataloader(base_path, split="Training", temporal_mode="monthly",
     print(f"Dataset size: {len(dataset)} locations")
     print(f"Batch size: {batch_size} locations")
     print(f"Number of workers: {num_workers}")
-    print(f"Expected iterations per epoch: {len(dataset) // batch_size}")
+    #print(f"Expected iterations per epoch: {len(dataset) // batch_size}")
     
     return DataLoader(
         wrapped_dataset,
@@ -295,8 +371,8 @@ def create_monthly_5_dataloader(base_path, split="Training", batch_size=4, num_w
     return create_dataloader(base_path, split, "monthly", "crop", batch_size, num_workers, debug)
 
 if __name__ == "__main__":
-    #base_path = "/mnt/guanabana/raid/shared/dropbox/QinLennart"
-    base_path = "/lustre/scratch/WUR/ESG/xu116"
+    base_path = "/mnt/guanabana/raid/shared/dropbox/QinLennart"
+    #base_path = "/lustre/scratch/WUR/ESG/xu116"
     try:
         # Test all configurations
         loaders = {
