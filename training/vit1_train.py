@@ -550,33 +550,50 @@ class ViTTrainer:
         self.writer.close()
 
 def main():
+    # # Initialize CUDA and clear cache
+    # if torch.cuda.is_available():
+    #     torch.cuda.empty_cache()
+    # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    # Check for GPU availability first
+    if not torch.cuda.is_available():
+        raise RuntimeError(
+            "No GPU available. This model requires GPU for training. "
+            "Please ensure CUDA is properly set up and you're using a GPU node."
+        )
     # Initialize CUDA and clear cache
-    if torch.cuda.is_available():
-        torch.cuda.empty_cache()
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    torch.cuda.empty_cache()
+    device = torch.device('cuda')
+
     random.seed(42)
     torch.manual_seed(42)
     np.random.seed(42)
+    torch.cuda.manual_seed_all(42)
     
      # Print GPU info
-    if torch.cuda.is_available():
-        print(f"Found {torch.cuda.device_count()} GPUs!")
-        for i in range(torch.cuda.device_count()):
-            print(f"GPU {i}: {torch.cuda.get_device_name(i)}")
-            print(f"Memory allocated: {torch.cuda.memory_allocated(i) / 1e9:.2f} GB")
-            print(f"Memory reserved: {torch.cuda.memory_reserved(i) / 1e9:.2f} GB")
+    # Print GPU info
+    print(f"\nFound {torch.cuda.device_count()} GPUs!")
+    for i in range(torch.cuda.device_count()):
+        print(f"GPU {i}: {torch.cuda.get_device_name(i)}")
+        props = torch.cuda.get_device_properties(i)
+        print(f"  Memory: {props.total_memory / 1024**3:.2f} GB")
+        print(f"  CUDA Capability: {props.major}.{props.minor}")
     
     # Set batch size based on number of GPUs
-    per_gpu_batch_size = 4
+    per_gpu_batch_size = 4  # Base batch size per GPU
     num_gpus = torch.cuda.device_count()
     total_batch_size = per_gpu_batch_size * num_gpus
-    print(f"\nBatch size per GPU: {per_gpu_batch_size}")
+    
+    print(f"\nTraining configuration:")
+    print(f"Batch size per GPU: {per_gpu_batch_size}")
+    print(f"Number of GPUs: {num_gpus}")
     print(f"Total batch size: {total_batch_size}")
+    
+    
 
     model = create_model()
     train_loader = create_monthly_15_dataloader(
-        base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart",
-        #base_path="/lustre/scratch/WUR/ESG/xu116",
+        #base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart",
+        base_path="/lustre/scratch/WUR/ESG/xu116",
         split="Training",
         batch_size=total_batch_size,
         num_workers=8,
@@ -584,8 +601,8 @@ def main():
     )
     
     val_loader = create_monthly_15_dataloader(
-        base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart", 
-        #base_path="/lustre/scratch/WUR/ESG/xu116",
+        #base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart", 
+        base_path="/lustre/scratch/WUR/ESG/xu116",
         split="Val_set",
         batch_size=total_batch_size,
         num_workers=8,
