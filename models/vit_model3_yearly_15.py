@@ -8,6 +8,15 @@ from torchgeo.models import ViTSmall16_Weights
 import numpy as np
 from typing import Union, cast
 
+
+class Lambda(nn.Module):
+    def __init__(self, func):
+        super().__init__()
+        self.func = func
+
+    def forward(self, x):
+        return self.func(x)
+    
 def drop_path(x, drop_prob: float = 0., training: bool = False):
 
     if drop_prob == 0. or not training:
@@ -239,18 +248,30 @@ class SentinelViT(nn.Module):
         self.norm = norm_layer(embed_dim)
 
         # Regression head for 7 fractions
+        # self.regression_head = nn.Sequential(
+        #     nn.LayerNorm(embed_dim),#384
+        #     nn.Linear(embed_dim, 512),
+        #     nn.BatchNorm1d(512),
+        #     nn.GELU(),
+        #     nn.Dropout(0.15),
+        #     nn.Linear(512, 256),
+        #     nn.GELU(),
+        #     nn.Dropout(0.15),
+        #     nn.LayerNorm(256),
+        #     nn.Linear(256, 7 * 25),  # 7 fractions * (5x5) spatial output
+        #     nn.Softmax() #ensure output are between 0 and 1
+        # )
         self.regression_head = nn.Sequential(
             nn.LayerNorm(embed_dim),#384
             nn.Linear(embed_dim, 512),
-            nn.BatchNorm1d(512),
             nn.GELU(),
-            nn.Dropout(0.15),
+            nn.Dropout(0.1),
             nn.Linear(512, 256),
             nn.GELU(),
-            nn.Dropout(0.15),
-            nn.LayerNorm(256),
+            nn.Dropout(0.1),
             nn.Linear(256, 7 * 25),  # 7 fractions * (5x5) spatial output
-            #nn.Softmax() #ensure output are between 0 and 1
+            Lambda(lambda x: x.reshape(-1, 7, 5, 5)),  # [B, 7, 5, 5]
+            Lambda(lambda x: F.softmax(x, dim=1))  # Ensures fractions sum to 1 at each pixel
         )
 
         # Initialize weights
@@ -478,11 +499,19 @@ class SentinelViT(nn.Module):
             
             output = output.view(B, 7, 5, 5)
             #print(f"Reshaped output: {output.shape}")  # [B, 7, 5, 5]
+            output = F.softmax(output, dim=1)  # To ensure fractions sum to 1
             
+            # Add this after generating the output in the forward method
+            if self.training:
+                # Check if fractions sum to 1 for each pixel
+                sums = output.sum(dim=1)  # Sum across fraction dimension
+                if not torch.allclose(sums, torch.ones_like(sums), rtol=1e-5):
+                    print(f"Warning: Fractions don't sum to 1. Range: [{sums.min():.3f}, {sums.max():.3f}]")
             temporal_outputs.append(output)
     
         final_output = torch.stack(temporal_outputs, dim=2)
         #print(f"\nFinal output shape: {final_output.shape}")  # [B, 7, 4, 5, 5]
+
         return final_output
     
 def create_model():
