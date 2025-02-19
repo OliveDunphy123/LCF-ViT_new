@@ -355,7 +355,7 @@ class ViTTrainer:
         print(f"\rEpoch {epoch} - Validating...", end="")
 
         with torch.no_grad():
-            for batch_idx, batch in self.val_loader:
+            for batch_idx, batch in enumerate(self.val_loader):
                 sentinel_data = batch['sentinel'].to(self.device)
                 ground_truth = batch['ground_truth'].to(self.device)
                 
@@ -380,7 +380,7 @@ class ViTTrainer:
                 self.writer.add_scalar('Val_Batch/main_loss', main_loss.item(), global_step)
                 self.writer.add_scalar('Val_Batch/smooth_loss', smooth_loss.item(), global_step)
         
-        # Calculate validation metrics
+        # Calculate validation metrics  
         epoch_predictions = torch.cat(all_predictions, dim=0)
         epoch_ground_truth = torch.cat(all_ground_truth, dim=0)
         metrics = calculate_accuracy_metrics(epoch_predictions, epoch_ground_truth)
@@ -494,10 +494,16 @@ def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Using device: {device}")
     
+    if torch.cuda.is_available():
+        print(f"GPU: {torch.cuda.get_device_name(0)}")
+        torch.cuda.empty_cache()  # Clear GPU cache
+
     # Set random seed for reproducibility
     random.seed(42)
     torch.manual_seed(42)
     np.random.seed(42)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(42)
     
     # Create model
     model = create_model()
@@ -508,14 +514,14 @@ def main():
         #base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart",
         base_path="/lustre/scratch/WUR/ESG/xu116",
         split="Training",
-        batch_size=12
+        batch_size=32
     )
     
     val_loader = create_yearly_15_dataloader(
         #base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart", 
         base_path="/lustre/scratch/WUR/ESG/xu116",
         split="Val_set",
-        batch_size=12
+        batch_size=32
     )
     
     trainer = ViTTrainer(
