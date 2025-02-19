@@ -119,36 +119,12 @@ def run_grid_search():
         best_config = None
         writer = SummaryWriter(results_dir / 'tensorboard')
 
-    # # Calculate new storage requirements
-    # num_combinations = len(combinations)
-    # approx_size_per_model = 384  # Approximate size in MB for one model
-    # total_size_gb = (num_combinations * approx_size_per_model) / 1024  # Convert to GB
-    
-    # print(f"\nGrid Search Information:")
-    # print(f"Number of combinations to test: {num_combinations}")
-    # print(f"Using 1/2 of training data and 1/2 of validation data")
-    # print(f"Epochs per configuration: 15")
-    # print(f"Approximate storage required: {total_size_gb:.1f} GB")
-    # estimated_time_per_config = 20  # minutes
-    # total_estimated_time = num_combinations * estimated_time_per_config
-    # print(f"Estimated total time: {total_estimated_time//60} hours {total_estimated_time%60} minutes")
-    # # user_input = input("Do you want to continue? (y/n): ")
-    
-    # # if user_input.lower() != 'y':
-    # #     print("Grid search cancelled by user")
-    # #     return
 
     # Save parameter grid
         with open(results_dir / 'param_grid.json', 'w') as f:
             json.dump(param_grid, f, indent=4)
 
-    # # Create TensorBoard writer
-    # writer = SummaryWriter(results_dir / 'tensorboard')
-
-    # # Track best configuration
-    # best_accuracy = 0.0
-    # best_config = None
-    # results = []
+   
 
     # Run grid search
     for i, combination in enumerate(combinations[start_idx:], start=start_idx):
@@ -159,15 +135,15 @@ def run_grid_search():
         try:
             # Create data loaders
             train_loader = create_yearly_15_dataloader(
-                base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart",
-                #base_path="/lustre/scratch/WUR/ESG/xu116",
+                #base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart",
+                base_path="/lustre/scratch/WUR/ESG/xu116",
                 split="Training",
                 batch_size=params['batch_size']
             )
             
             val_loader = create_yearly_15_dataloader(
-                base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart",
-                #base_path="/lustre/scratch/WUR/ESG/xu116",
+                #base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart",
+                base_path="/lustre/scratch/WUR/ESG/xu116",
                 split="Val_set",
                 batch_size=params['batch_size']
             )
@@ -193,7 +169,7 @@ def run_grid_search():
                 batch_size=params['batch_size'],
                 shuffle=True,
                 #num_workers=train_loader.num_workers,
-                num_workers=4,
+                num_workers=2,
                 pin_memory=train_loader.pin_memory,
                 persistent_workers=train_loader.persistent_workers,
                 prefetch_factor=2
@@ -204,7 +180,7 @@ def run_grid_search():
                 batch_size=params['batch_size'],
                 shuffle=False,
                 #num_workers=val_loader.num_workers,
-                num_workers=4,
+                num_workers=2,
                 pin_memory=val_loader.pin_memory,
                 persistent_workers=val_loader.persistent_workers,
                 prefetch_factor=2
@@ -307,7 +283,7 @@ def run_grid_search():
         # Sort results by multiple metrics
         sorted_results = sorted(results, 
                               key=lambda x: (
-                                  sum(x['metrics']['r2_scores'])/7,  # Average R2
+                                  sum(x['metrics']['overall_accuracy'])/7,  # Average R2
                                   -sum(x['metrics']['mae_per_class'])/7  # Average MAE (negative because lower is better)
                               ), 
                               reverse=True)
@@ -348,7 +324,7 @@ def run_grid_search():
                 f.write(f"  Average RMSE: {sum(metrics['rmse_per_class'])/7:.4f}\n")
             
             # Overall accuracy
-            f.write(f"\nOverall Accuracy: {metrics['accuracy']:.4f}\n")
+            f.write(f"\nOverall Accuracy: {metrics['overall_accuracy']:.4f}\n")
             
             # Model file reference
             config_id = f"lr{params['learning_rate']}_wd{params['weight_decay']}_bs{params['batch_size']}_{params['loss_function']['name']}_{params['scheduler_type']}"

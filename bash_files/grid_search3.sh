@@ -6,6 +6,11 @@
 #SBATCH --mem=32000M
 #SBATCH --time=72:00:00
 
+# Load CUDA modules
+module load GPU
+module load CUDA/11.8.0
+module load cuDNN/8.7.0.84-CUDA-11.8.0
+
 # Initialize micromamba without relying on profile.d
 export MAMBA_ROOT_PREFIX=/lustre/scratch/WUR/ESG/xu116/micromamba
 export MAMBA_EXE="/lustre/scratch/WUR/ESG/xu116/micromamba/micromamba"
@@ -19,15 +24,14 @@ micromamba activate land_cover_fraction
 # Add your project root to PYTHONPATH
 export PYTHONPATH="/lustre/scratch/WUR/ESG/xu116/LCF-ViT_new:$PYTHONPATH"
 
-# Load CUDA modules
-module load GPU
-module load CUDA/11.8.0
-module load cuDNN/8.7.0.84-CUDA-11.8.0
 
 cd /lustre/scratch/WUR/ESG/xu116/LCF-ViT_new/utils
 
 # Print debug information to confirm environment
 echo "Starting job with environment:"
+echo "Node: $(hostname)"
+echo "GPU information:"
+nvidia-smi
 python -c "
 import sys
 import torch
