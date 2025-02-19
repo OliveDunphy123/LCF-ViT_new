@@ -550,6 +550,7 @@ class ViTTrainer:
         self.writer.close()
 
 def main():
+
     # Initialize CUDA and clear cache
     if torch.cuda.is_available():
         torch.cuda.empty_cache()

@@ -53,25 +53,41 @@ def run_grid_search():
     os.environ["CUDA_VISIBLE_DEVICES"] = "1,2,3"  # Use first 3 GPUs
 
     # Define parameter grid
+    # param_grid = {
+    #     'learning_rate': [1e-4,5e-4],#[1e-4, 5e-4],  # 2 options
+    #     'weight_decay': [1e-3,1e-2],#[1e-3, 1e-2],   # 2 options
+    #     'batch_size': [12,15],#[16, 32],         # 2 options
+    #     'loss_function': [
+    #         {
+    #             'name': 'mse_l1',
+    #             'params': {
+    #                 'mse_weight': 0.7,
+    #                 'l1_weight': 0.3
+    #             }
+    #         },
+    #         {
+    #             'name': 'smooth_l1',
+    #             'params': {
+    #                 'smooth_weight': 0.1,
+    #                 'beta': 1.0
+    #             }
+    #         },
+    #         {
+    #             'name': 'cross_entropy',
+    #             'params': {
+    #                 'num_bins': 20,
+    #                 'smoothing': 0.1
+    #             }
+    #         }
+    #     ],
+    #     'scheduler_type': ['onecycle']  # 1 option
+    # }
+
     param_grid = {
-        'learning_rate': [1e-4,5e-4],#[1e-4, 5e-4],  # 2 options
-        'weight_decay': [1e-3,1e-2],#[1e-3, 1e-2],   # 2 options
-        'batch_size': [12,15],#[16, 32],         # 2 options
+        'learning_rate': [5e-4],  # 0.0005
+        'weight_decay': [1e-2],   # 0.01
+        'batch_size': [15],
         'loss_function': [
-            {
-                'name': 'mse_l1',
-                'params': {
-                    'mse_weight': 0.7,
-                    'l1_weight': 0.3
-                }
-            },
-            {
-                'name': 'smooth_l1',
-                'params': {
-                    'smooth_weight': 0.1,
-                    'beta': 1.0
-                }
-            },
             {
                 'name': 'cross_entropy',
                 'params': {
@@ -80,8 +96,21 @@ def run_grid_search():
                 }
             }
         ],
-        'scheduler_type': ['onecycle']  # 1 option
+        'scheduler_type': ['onecycle']
     }
+#     {
+#   "learning_rate": 0.0005,
+#   "weight_decay": 0.01,
+#   "batch_size": 15,
+#   "loss_function": {
+#     "name": "cross_entropy",
+#     "params": {
+#       "num_bins": 20,
+#       "smoothing": 0.1
+#     }
+#   },
+#   "scheduler_type": "onecycle"
+# }
 
     # Generate all combinations
     param_names = list(param_grid.keys())
@@ -262,7 +291,7 @@ def run_grid_search():
         # Sort results by multiple metrics
         sorted_results = sorted(results, 
                               key=lambda x: (
-                                  sum(x['metrics']['r2_scores'])/7,  # Average R2
+                                  sum(x['metrics']['overall_accuracy'])/7,  # Average R2
                                   -sum(x['metrics']['mae_per_class'])/7  # Average MAE (negative because lower is better)
                               ), 
                               reverse=True)
@@ -303,7 +332,7 @@ def run_grid_search():
                 f.write(f"  Average RMSE: {sum(metrics['rmse_per_class'])/7:.4f}\n")
             
             # Overall accuracy
-            f.write(f"\nOverall Accuracy: {metrics['accuracy']:.4f}\n")
+            f.write(f"\nOverall Accuracy: {metrics['overall_accuracy']:.4f}\n")
             
             # Model file reference
             config_id = f"lr{params['learning_rate']}_wd{params['weight_decay']}_bs{params['batch_size']}_{params['loss_function']['name']}_{params['scheduler_type']}"
