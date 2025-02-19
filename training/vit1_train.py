@@ -550,33 +550,27 @@ class ViTTrainer:
         self.writer.close()
 
 def main():
-    # # Initialize CUDA and clear cache
-    # if torch.cuda.is_available():
-    #     torch.cuda.empty_cache()
-    # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    # Check for GPU availability first
-    if not torch.cuda.is_available():
-        raise RuntimeError(
-            "No GPU available. This model requires GPU for training. "
-            "Please ensure CUDA is properly set up and you're using a GPU node."
-        )
     # Initialize CUDA and clear cache
-    torch.cuda.empty_cache()
-    device = torch.device('cuda')
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+        device = torch.device('cuda')
+        print(f"\nUsing GPU for training:")
+        print(f"CUDA Version: {torch.version.cuda}")
+        print(f"Device Count: {torch.cuda.device_count()}")
+        for i in range(torch.cuda.device_count()):
+            print(f"Device {i}: {torch.cuda.get_device_name(i)}")
+    else:
+        print("\nWARNING: No GPU available. Checking environment...")
+        print("This could be because:")
+        print("1. You're running on a login node instead of a compute node")
+        print("2. CUDA modules aren't loaded")
+        print("3. GPU resources weren't properly requested in job script")
+        sys.exit(1)
 
     random.seed(42)
     torch.manual_seed(42)
     np.random.seed(42)
-    torch.cuda.manual_seed_all(42)
     
-     # Print GPU info
-    # Print GPU info
-    print(f"\nFound {torch.cuda.device_count()} GPUs!")
-    for i in range(torch.cuda.device_count()):
-        print(f"GPU {i}: {torch.cuda.get_device_name(i)}")
-        props = torch.cuda.get_device_properties(i)
-        print(f"  Memory: {props.total_memory / 1024**3:.2f} GB")
-        print(f"  CUDA Capability: {props.major}.{props.minor}")
     
     # Set batch size based on number of GPUs
     per_gpu_batch_size = 4  # Base batch size per GPU

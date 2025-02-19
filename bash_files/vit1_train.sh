@@ -20,6 +20,7 @@ micromamba activate land_cover_fraction
 export PYTHONPATH="/lustre/scratch/WUR/ESG/xu116/LCF-ViT_new:$PYTHONPATH"
 
 # Load CUDA modules
+module purge
 module load GPU
 module load CUDA/11.8.0
 module load cuDNN/8.7.0.84-CUDA-11.8.0
@@ -29,6 +30,8 @@ export CUDA_VISIBLE_DEVICES=0,1,2  # Make 3 GPUs visible to the process
 export CUDA_HOME=/usr/local/cuda-11.8  # Adjust this path based on your system
 export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
 
+# Additional PyTorch settings for better GPU memory management
+export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
 # Change directory to training folder
 cd /lustre/scratch/WUR/ESG/xu116/LCF-ViT_new/training
 
