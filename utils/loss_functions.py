@@ -92,119 +92,119 @@ class CrossEntropyLoss(nn.Module):
             
         return loss
 
-class HuberFocalLoss(nn.Module):
-    """Combines Huber loss with focal loss concept for handling outliers"""
-    def __init__(self, beta=1.0, alpha=2.0, gamma=0.5):
-        super().__init__()
-        self.beta = beta
-        self.alpha = alpha  # Controls focus on hard examples
-        self.gamma = gamma  # Modulates the focal weight
+# class HuberFocalLoss(nn.Module):
+#     """Combines Huber loss with focal loss concept for handling outliers"""
+#     def __init__(self, beta=1.0, alpha=2.0, gamma=0.5):
+#         super().__init__()
+#         self.beta = beta
+#         self.alpha = alpha  # Controls focus on hard examples
+#         self.gamma = gamma  # Modulates the focal weight
         
-    def forward(self, pred, target):
-        diff = torch.abs(pred - target)
-        huber_loss = torch.where(diff < self.beta,
-                                0.5 * diff * diff,
-                                self.beta * diff - 0.5 * self.beta * self.beta)
+#     def forward(self, pred, target):
+#         diff = torch.abs(pred - target)
+#         huber_loss = torch.where(diff < self.beta,
+#                                 0.5 * diff * diff,
+#                                 self.beta * diff - 0.5 * self.beta * self.beta)
         
-        # Focal weight based on prediction error
-        focal_weight = (diff / diff.max()).pow(self.gamma)
-        focal_weight = self.alpha * focal_weight + (1 - self.alpha)
+#         # Focal weight based on prediction error
+#         focal_weight = (diff / diff.max()).pow(self.gamma)
+#         focal_weight = self.alpha * focal_weight + (1 - self.alpha)
         
-        return (focal_weight * huber_loss).mean()
+#         return (focal_weight * huber_loss).mean()
 
-class DistributionLoss(nn.Module):
-    """Loss that considers the distribution of land cover fractions"""
-    def __init__(self, kl_weight=0.1):
-        super().__init__()
-        self.kl_weight = kl_weight
-        self.mse_loss = nn.MSELoss()
+# class DistributionLoss(nn.Module):
+#     """Loss that considers the distribution of land cover fractions"""
+#     def __init__(self, kl_weight=0.1):
+#         super().__init__()
+#         self.kl_weight = kl_weight
+#         self.mse_loss = nn.MSELoss()
         
-    def forward(self, pred, target):
-        # Basic MSE loss
-        mse = self.mse_loss(pred, target)
+#     def forward(self, pred, target):
+#         # Basic MSE loss
+#         mse = self.mse_loss(pred, target)
         
-        # KL divergence between predicted and target distributions
-        pred_dist = F.softmax(pred, dim=-1)
-        target_dist = F.softmax(target, dim=-1)
-        kl_div = F.kl_div(pred_dist.log(), target_dist, reduction='batchmean')
+#         # KL divergence between predicted and target distributions
+#         pred_dist = F.softmax(pred, dim=-1)
+#         target_dist = F.softmax(target, dim=-1)
+#         kl_div = F.kl_div(pred_dist.log(), target_dist, reduction='batchmean')
         
-        # Ensure predictions sum to approximately 1
-        sum_constraint = torch.abs(pred.sum(dim=-1) - 1.0).mean()
+#         # Ensure predictions sum to approximately 1
+#         sum_constraint = torch.abs(pred.sum(dim=-1) - 1.0).mean()
         
-        return mse + self.kl_weight * (kl_div + sum_constraint)
+#         return mse + self.kl_weight * (kl_div + sum_constraint)
 
-class TemporalConsistencyLoss(nn.Module):
-    """Loss that emphasizes temporal consistency in predictions"""
-    def __init__(self, smooth_weight=0.1, trend_weight=0.05):
-        super().__init__()
-        self.smooth_weight = smooth_weight
-        self.trend_weight = trend_weight
-        self.mse_loss = nn.MSELoss()
+# class TemporalConsistencyLoss(nn.Module):
+#     """Loss that emphasizes temporal consistency in predictions"""
+#     def __init__(self, smooth_weight=0.1, trend_weight=0.05):
+#         super().__init__()
+#         self.smooth_weight = smooth_weight
+#         self.trend_weight = trend_weight
+#         self.mse_loss = nn.MSELoss()
         
-    def forward(self, pred, target):
-        # Base MSE loss
-        mse = self.mse_loss(pred, target)
+#     def forward(self, pred, target):
+#         # Base MSE loss
+#         mse = self.mse_loss(pred, target)
         
-        # Temporal smoothness (penalize sudden changes)
-        temp_diff = pred[:, :, 1:] - pred[:, :, :-1]
-        smooth_loss = torch.abs(temp_diff).mean()
+#         # Temporal smoothness (penalize sudden changes)
+#         temp_diff = pred[:, :, 1:] - pred[:, :, :-1]
+#         smooth_loss = torch.abs(temp_diff).mean()
         
-        # Trend consistency (changes should follow target trends)
-        target_diff = target[:, :, 1:] - target[:, :, :-1]
-        trend_loss = self.mse_loss(temp_diff, target_diff)
+#         # Trend consistency (changes should follow target trends)
+#         target_diff = target[:, :, 1:] - target[:, :, :-1]
+#         trend_loss = self.mse_loss(temp_diff, target_diff)
         
-        return mse + self.smooth_weight * smooth_loss + self.trend_weight * trend_loss
+#         return mse + self.smooth_weight * smooth_loss + self.trend_weight * trend_loss
 
-class CompositeMultiLoss(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.mse_loss = nn.MSELoss()
-        self.l1_loss = nn.L1Loss()
-        self.huber_loss = nn.HuberLoss(delta=1.0)
+# class CompositeMultiLoss(nn.Module):
+#     def __init__(self):
+#         super().__init__()
+#         self.mse_loss = nn.MSELoss()
+#         self.l1_loss = nn.L1Loss()
+#         self.huber_loss = nn.HuberLoss(delta=1.0)
         
-        # Learnable weights
-        self.mse_weight = nn.Parameter(torch.tensor(1.0))
-        self.l1_weight = nn.Parameter(torch.tensor(1.0))
-        self.huber_weight = nn.Parameter(torch.tensor(1.0))
+#         # Learnable weights
+#         self.mse_weight = nn.Parameter(torch.tensor(1.0))
+#         self.l1_weight = nn.Parameter(torch.tensor(1.0))
+#         self.huber_weight = nn.Parameter(torch.tensor(1.0))
         
-    def forward(self, pred, target):
-        # Compute individual losses
-        mse = self.mse_loss(pred, target)
-        l1 = self.l1_loss(pred, target)
-        huber = self.huber_loss(pred, target)
+#     def forward(self, pred, target):
+#         # Compute individual losses
+#         mse = self.mse_loss(pred, target)
+#         l1 = self.l1_loss(pred, target)
+#         huber = self.huber_loss(pred, target)
         
-        # Get normalized weights
-        weights = F.softmax(torch.stack([
-            self.mse_weight,
-            self.l1_weight,
-            self.huber_weight
-        ]), dim=0)
+#         # Get normalized weights
+#         weights = F.softmax(torch.stack([
+#             self.mse_weight,
+#             self.l1_weight,
+#             self.huber_weight
+#         ]), dim=0)
         
-        # Combine losses
-        total_loss = (
-            weights[0] * mse +
-            weights[1] * l1 +
-            weights[2] * huber
-        )
+#         # Combine losses
+#         total_loss = (
+#             weights[0] * mse +
+#             weights[1] * l1 +
+#             weights[2] * huber
+#         )
         
-        return total_loss
+#         return total_loss
 
-class BoundaryAwareLoss(nn.Module):
-    """Loss that pays special attention to boundary values (0 and 1)"""
-    def __init__(self, boundary_weight=2.0):
-        super().__init__()
-        self.boundary_weight = boundary_weight
-        self.mse_loss = nn.MSELoss(reduction='none')
+# class BoundaryAwareLoss(nn.Module):
+#     """Loss that pays special attention to boundary values (0 and 1)"""
+#     def __init__(self, boundary_weight=2.0):
+#         super().__init__()
+#         self.boundary_weight = boundary_weight
+#         self.mse_loss = nn.MSELoss(reduction='none')
         
-    def forward(self, pred, target):
-        mse = self.mse_loss(pred, target)
+#     def forward(self, pred, target):
+#         mse = self.mse_loss(pred, target)
         
-        # Identify boundary cases (values close to 0 or 1)
-        boundary_mask = (target < 0.1) | (target > 0.9)
+#         # Identify boundary cases (values close to 0 or 1)
+#         boundary_mask = (target < 0.1) | (target > 0.9)
         
-        # Apply higher weight to boundary cases
-        weighted_mse = torch.where(boundary_mask,
-                                 mse * self.boundary_weight,
-                                 mse)
+#         # Apply higher weight to boundary cases
+#         weighted_mse = torch.where(boundary_mask,
+#                                  mse * self.boundary_weight,
+#                                  mse)
         
-        return weighted_mse.mean()
+#         return weighted_mse.mean()

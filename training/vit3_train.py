@@ -490,23 +490,45 @@ class ViTTrainer:
 
 
 def main():
-    # Set device
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f"Using device: {device}")
+    # # Set device
+    # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    # print(f"Using device: {device}")
     
-    if torch.cuda.is_available():
-        print(f"GPU: {torch.cuda.get_device_name(0)}")
-        torch.cuda.empty_cache()  # Clear GPU cache
+    # if torch.cuda.is_available():
+    #     print(f"GPU: {torch.cuda.get_device_name(0)}")
+    #     torch.cuda.empty_cache()  # Clear GPU cache
 
-    # Set random seed for reproducibility
-    random.seed(42)
+    # # Set random seed for reproducibility
+    # random.seed(42)
+    # torch.manual_seed(42)
+    # np.random.seed(42)
+    # if torch.cuda.is_available():
+    #     torch.cuda.manual_seed(42)
+    # GPU setup
+    if not torch.cuda.is_available():
+        print("No GPU available, using CPU")
+        device = torch.device('cpu')
+    else:
+        # Set up GPU
+        torch.cuda.empty_cache()  # Clear GPU cache
+        device = torch.device('cuda:0')  # Use first GPU
+        print(f"Using GPU: {torch.cuda.get_device_name(0)}")
+        print(f"Memory Usage:")
+        print(f"Allocated: {torch.cuda.memory_allocated(0)//1024//1024}MB")
+        print(f"Cached: {torch.cuda.memory_reserved(0)//1024//1024}MB")
+
+    # Set random seeds for reproducibility
     torch.manual_seed(42)
     np.random.seed(42)
     if torch.cuda.is_available():
         torch.cuda.manual_seed(42)
-    
+        torch.cuda.manual_seed_all(42)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
     # Create model
     model = create_model()
+    model = model.to(device)
     print("Model created successfully")
     
     # Create dataloaders for train, val and test

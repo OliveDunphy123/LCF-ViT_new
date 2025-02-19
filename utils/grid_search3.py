@@ -8,8 +8,8 @@ import os
 from torch.utils.tensorboard import SummaryWriter
 
 # Get the absolute path to the project root directory
-#PROJECT_ROOT = Path('/mnt/guanabana/raid/hdd1/qinxu/Python/LCF-ViT')
-PROJECT_ROOT = Path('/lustre/scratch/WUR/ESG/xu116/Python/LCF-ViT_new')
+PROJECT_ROOT = Path('/mnt/guanabana/raid/hdd1/qinxu/Python/LCF-ViT')
+#PROJECT_ROOT = Path('/lustre/scratch/WUR/ESG/xu116/Python/LCF-ViT_new')
 sys.path.append(str(PROJECT_ROOT))
 
 from models.vit_model3_yearly_15 import create_model
@@ -159,15 +159,15 @@ def run_grid_search():
         try:
             # Create data loaders
             train_loader = create_yearly_15_dataloader(
-                #base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart",
-                base_path="/lustre/scratch/WUR/ESG/xu116",
+                base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart",
+                #base_path="/lustre/scratch/WUR/ESG/xu116",
                 split="Training",
                 batch_size=params['batch_size']
             )
             
             val_loader = create_yearly_15_dataloader(
-                #base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart",
-                base_path="/lustre/scratch/WUR/ESG/xu116",
+                base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart",
+                #base_path="/lustre/scratch/WUR/ESG/xu116",
                 split="Val_set",
                 batch_size=params['batch_size']
             )

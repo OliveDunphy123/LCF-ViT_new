@@ -182,9 +182,8 @@ import json
 from datetime import datetime
 import pandas as pd
 
-from data.my_whole_dataset import create_yearly_15_dataloader
 from models.vit_model3_yearly_15 import create_model
-from training.vit3_train import calculate_accuracy_metrics
+from data.my_whole_dataset import create_yearly_15_dataloader
 
 def plot_confusion_matrix(bins_metrics, save_path):
     """Plot confusion matrix for binned predictions"""
@@ -326,19 +325,33 @@ def test_model(model_path, test_loader, device='cuda'):
     with open(results_dir / 'test_metrics.json', 'w') as f:
         json.dump(results, f, indent=4)
     
-    # Generate plots
-    plot_confusion_matrix(
-        final_metrics['bins_metrics'],
-        results_dir / 'bins_confusion_matrix.png'
-    )
-    plot_class_metrics(
-        final_metrics['class_metrics'],
-        results_dir / 'class_metrics.png'
-    )
-    plot_temporal_changes(
-        final_metrics['class_change_metrics'],
-        results_dir / 'temporal_changes.png'
-    )
+    # Plot metrics
+    plt.figure(figsize=(15, 5))
+    
+    # Plot MAE per class
+    plt.subplot(131)
+    plt.bar(range(7), mae_per_class.cpu())
+    plt.title('MAE per Class')
+    plt.xlabel('Class')
+    plt.ylabel('MAE')
+    
+    # Plot RMSE per class
+    plt.subplot(132)
+    plt.bar(range(7), rmse_per_class.cpu())
+    plt.title('RMSE per Class')
+    plt.xlabel('Class')
+    plt.ylabel('RMSE')
+    
+    # Plot R² scores
+    plt.subplot(133)
+    plt.bar(range(7), r2_scores)
+    plt.title('R² Scores per Class')
+    plt.xlabel('Class')
+    plt.ylabel('R²')
+    
+    plt.tight_layout()
+    plt.savefig(results_dir / 'metrics.png')
+    plt.close()
     
     # Print summary
     print("\nTest Results Summary:")
