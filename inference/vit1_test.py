@@ -305,24 +305,32 @@ def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Using device: {device}")
     
-    # Create model
+    # Create model first as a regular model
     model = create_model()
-    if torch.cuda.device_count() > 1:
-        model = torch.nn.DataParallel(model)
-    model = model.to(device)
     
-    # Load best model weights (from epoch 41)
-    checkpoint_path = "/lustre/scratch/WUR/ESG/xu116/LCF-ViT_new/training/vit_monthly_15_results_20250220_035427/checkpoint_epoch_41.pth"  # Update with your timestamp
+    # Load checkpoint
+    checkpoint_path = "/lustre/scratch/WUR/ESG/xu116/LCF-ViT_new/training/vit_monthly_15_results_20250220_035427/checkpoint_epoch_41.pth"
     checkpoint = torch.load(checkpoint_path, map_location=device)
-    model.load_state_dict(checkpoint['model_state_dict'])
+    
+    # Load state dict before wrapping with DataParallel
+    # Remove 'module.' prefix if it exists in the state dict keys
+    state_dict = checkpoint['model_state_dict']
+    new_state_dict = {}
+    for k, v in state_dict.items():
+        name = k[7:] if k.startswith('module.') else k  # remove 'module.' prefix
+        new_state_dict[name] = v
+    
+    model.load_state_dict(new_state_dict)
     print(f"\nLoaded model from epoch {checkpoint['epoch']}")
     
-    # Create test dataloader
+    # Use single GPU with larger batch size for efficient testing
+    model = model.to(device)
+    
+    # Create test dataloader with larger batch size
     test_loader = create_monthly_15_dataloader(
-        #base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart",
         base_path="/lustre/scratch/WUR/ESG/xu116",
         split="Test_set",
-        batch_size=8,
+        batch_size=32,  # Larger batch size for testing
         num_workers=4
     )
     
@@ -348,23 +356,8 @@ def main():
     print(f"  MAE: {metrics['change_metrics']['mae']:.4f}")
     print(f"  RMSE: {metrics['change_metrics']['rmse']:.4f}")
     
-    print("\nPer-class Change Detection Metrics:")
-    for i, metrics in enumerate(metrics['class_change_metrics']):
-        print(f"\nClass {i+1}:")
-        print(f"  R²: {metrics['r2']:.4f}")
-        print(f"  MAE: {metrics['mae']:.4f}")
-        print(f"  RMSE: {metrics['rmse']:.4f}")
-    
-    print("\nPer-class Change Detection Metrics:")
-    print("\nNorthern Hemisphere (August-to-August changes):")
-    for i, metrics in enumerate(metrics['class_change_metrics']['northern_hemisphere']):
-        print(f"\nClass {i+1}:")
-        print(f"  R²: {metrics['r2']:.4f}")
-        print(f"  MAE: {metrics['mae']:.4f}")
-        print(f"  RMSE: {metrics['rmse']:.4f}")
-    
-    print("\nSouthern Hemisphere (February-to-February changes):")
-    for i, metrics in enumerate(metrics['class_change_metrics']['southern_hemisphere']):
+    print("\nPer-class Metrics:")
+    for i, metrics in enumerate(metrics['class_metrics']):
         print(f"\nClass {i+1}:")
         print(f"  R²: {metrics['r2']:.4f}")
         print(f"  MAE: {metrics['mae']:.4f}")
