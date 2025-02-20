@@ -510,14 +510,16 @@ def main():
 
     model = create_model()
     train_loader = create_monthly_5_dataloader(
-        base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart",
+        #base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart",
+        base_path="/lustre/scratch/WUR/ESG/xu116",
         split="Training",
         batch_size=total_batch_size,
         num_workers=8
     )
     
     val_loader = create_monthly_5_dataloader(
-        base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart",
+        #base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart",
+        base_path="/lustre/scratch/WUR/ESG/xu116",
         split="Val_set",
         batch_size=total_batch_size,
         num_workers=8
