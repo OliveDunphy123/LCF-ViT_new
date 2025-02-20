@@ -312,7 +312,7 @@ def main():
     model = model.to(device)
     
     # Load best model weights (from epoch 41)
-    checkpoint_path = "training/vit_monthly_15_results_20250220_035427/checkpoint_epoch_41.pth"  # Update with your timestamp
+    checkpoint_path = "/lustre/scratch/WUR/ESG/xu116/LCF-ViT_new/training/vit_monthly_15_results_20250220_035427/checkpoint_epoch_41.pth"  # Update with your timestamp
     checkpoint = torch.load(checkpoint_path, map_location=device)
     model.load_state_dict(checkpoint['model_state_dict'])
     print(f"\nLoaded model from epoch {checkpoint['epoch']}")
