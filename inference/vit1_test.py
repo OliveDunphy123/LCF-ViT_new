@@ -12,7 +12,6 @@ from models.vit_model1_monthly_15 import create_model
 from data.my_whole_dataset import create_monthly_15_dataloader
 
 def calculate_accuracy_metrics(predictions, ground_truth):
-    # Your provided metrics calculation function here
     """
     Calculate comprehensive accuracy metrics for land cover fraction predictions
     
@@ -167,97 +166,6 @@ def calculate_accuracy_metrics(predictions, ground_truth):
             'mean_error': class_change_mean_error.item()
         })
     
-    # Calculate year-to-year changes
-    truth_changes = annual_truth[:, :, 1:] - annual_truth[:, :, :-1]  # Changes between consecutive years
-    pred_changes = annual_pred[:, :, 1:] - annual_pred[:, :, :-1]
-    
-    # Calculate overall change metrics
-    change_pred_flat = pred_changes.flatten()
-    change_truth_flat = truth_changes.flatten()
-    
-    change_ss_tot = torch.sum((change_truth_flat - torch.mean(change_truth_flat))**2)
-    change_ss_res = torch.sum((change_truth_flat - change_pred_flat)**2)
-    change_r2 = 1 - (change_ss_res / (change_ss_tot + 1e-8))
-    
-    change_mae = torch.mean(torch.abs(change_pred_flat - change_truth_flat))
-    change_rmse = torch.sqrt(torch.mean((change_pred_flat - change_truth_flat)**2))
-    change_mean_error = torch.mean(change_pred_flat - change_truth_flat)
-    
-    change_metrics = {
-        'r2': change_r2.item(),
-        'mae': change_mae.item(),
-        'rmse': change_rmse.item(),
-        'mean_error': change_mean_error.item()
-    }
-    
-    # Per-class change detection metrics
-    class_change_metrics = []
-    
-    for c in range(num_classes):
-        class_change_pred = pred_changes[:, c].flatten()
-        class_change_truth = truth_changes[:, c].flatten()
-        
-        class_change_ss_tot = torch.sum((class_change_truth - torch.mean(class_change_truth))**2)
-        class_change_ss_res = torch.sum((class_change_truth - class_change_pred)**2)
-        class_change_r2 = 1 - (class_change_ss_res / (class_change_ss_tot + 1e-8))
-        
-        class_change_mae = torch.mean(torch.abs(class_change_pred - class_change_truth))
-        class_change_rmse = torch.sqrt(torch.mean((class_change_pred - class_change_truth)**2))
-        class_change_mean_error = torch.mean(class_change_pred - class_change_truth)
-        
-        class_change_metrics.append({
-            'r2': class_change_r2.item(),
-            'mae': class_change_mae.item(),
-            'rmse': class_change_rmse.item(),
-            'mean_error': class_change_mean_error.item()
-        })
-    
-    # Per-class change detection metrics
-    class_change_metrics = {
-        'northern_hemisphere': [],
-        'southern_hemisphere': []
-    }
-    
-    # Calculate per-class metrics for Northern Hemisphere
-    for c in range(num_classes):
-        class_change_pred = nh_pred_changes[:, c].flatten()
-        class_change_truth = nh_truth_changes[:, c].flatten()
-        
-        class_change_ss_tot = torch.sum((class_change_truth - torch.mean(class_change_truth))**2)
-        class_change_ss_res = torch.sum((class_change_truth - class_change_pred)**2)
-        class_change_r2 = 1 - (class_change_ss_res / (class_change_ss_tot + 1e-8))
-        
-        class_change_mae = torch.mean(torch.abs(class_change_pred - class_change_truth))
-        class_change_rmse = torch.sqrt(torch.mean((class_change_pred - class_change_truth)**2))
-        class_change_mean_error = torch.mean(class_change_pred - class_change_truth)
-        
-        class_change_metrics['northern_hemisphere'].append({
-            'r2': class_change_r2.item(),
-            'mae': class_change_mae.item(),
-            'rmse': class_change_rmse.item(),
-            'mean_error': class_change_mean_error.item()
-        })
-    
-    # Calculate per-class metrics for Southern Hemisphere
-    for c in range(num_classes):
-        class_change_pred = sh_pred_changes[:, c].flatten()
-        class_change_truth = sh_truth_changes[:, c].flatten()
-        
-        class_change_ss_tot = torch.sum((class_change_truth - torch.mean(class_change_truth))**2)
-        class_change_ss_res = torch.sum((class_change_truth - class_change_pred)**2)
-        class_change_r2 = 1 - (class_change_ss_res / (class_change_ss_tot + 1e-8))
-        
-        class_change_mae = torch.mean(torch.abs(class_change_pred - class_change_truth))
-        class_change_rmse = torch.sqrt(torch.mean((class_change_pred - class_change_truth)**2))
-        class_change_mean_error = torch.mean(class_change_pred - class_change_truth)
-        
-        class_change_metrics['southern_hemisphere'].append({
-            'r2': class_change_r2.item(),
-            'mae': class_change_mae.item(),
-            'rmse': class_change_rmse.item(),
-            'mean_error': class_change_mean_error.item()
-        })
-    
     return {
         'overall_r2': overall_r2.item(),
         'overall_mae': overall_mae.item(),
@@ -266,7 +174,7 @@ def calculate_accuracy_metrics(predictions, ground_truth):
         'bins_metrics': bins_metrics,
         'weighted_bins_accuracy': weighted_accuracy,
         'class_metrics': class_metrics,
-        'change_metrics': change_metrics,  # Now includes monthly, seasonal, and yearly changes
+        'change_metrics': change_metrics,
         'class_change_metrics': class_change_metrics,
         'temporal_info': {
             'num_months': ground_truth.shape[2],
