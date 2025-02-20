@@ -276,7 +276,8 @@ class SentinelViT(nn.Module):
             nn.Dropout(0.1),
             nn.Linear(256, 7 * 25),  # 7 fractions * (5x5) spatial output
             Lambda(lambda x: x.view(-1, 7, 5, 5)),  # [B, 7, 5, 5]
-            Lambda(lambda x: torch.softmax(x, dim=1))  # Ensures fractions sum to 1 at each pixel
+            #Lambda(lambda x: torch.softmax(x, dim=1))  # Ensures fractions sum to 1 at each pixel
+            nn.Softmax(dim=1)
         )
 
         # Initialize weights
@@ -304,6 +305,9 @@ class SentinelViT(nn.Module):
                 nn.init.trunc_normal_(m.weight, std=.02)
                 if m.bias is not None:
                     nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.LayerNorm):
+                nn.init.constant_(m.bias, 0)
+                nn.init.constant_(m.weight, 1.0)
     
     def _resize_pos_embed(self, pos_embed):
         """Resize position embeddings to match current model size"""
@@ -429,10 +433,45 @@ class SentinelViT(nn.Module):
             features = self.norm(tokens)[:,0] #[B, embed_dim]
             # print(f"Features shape: {features.shape}")
 
-            # Generate predictions
-            output = self.regression_head(features) # [B, 7*5*5]
-            # print(f"Output shape: {output.shape}")
-            output = output.reshape(B, 7, 5, 5) # reshape to [B,7,5,5]
+            # # Generate predictions
+            # output = self.regression_head(features) # [B, 7*5*5]
+            # # print(f"Output shape: {output.shape}")
+            # output = output.reshape(B, 7, 5, 5) # reshape to [B,7,5,5]
+            # Process through regression head with monitoring
+            output = features
+            layer_names = ['LayerNorm1', 'Linear1', 'GELU1', 'Dropout1', 
+                        'Linear2', 'GELU2', 'Dropout2', 'Linear3', 
+                        'Reshape', 'Softmax']
+            
+            # Monitor each layer
+            for i, (layer, name) in enumerate(zip(self.regression_head, layer_names)):
+                prev_output = output
+                output = layer(output)
+                
+                # Check for NaN values
+                if torch.isnan(output).any():
+                    print(f"\nNaN detected after {name} (layer {i})")
+                    print(f"Input shape: {prev_output.shape}")
+                    print(f"Output shape: {output.shape}")
+                    if not torch.isnan(prev_output).all():
+                        print(f"Input stats before NaN:")
+                        valid_input = prev_output[~torch.isnan(prev_output)]
+                        print(f"- Min: {valid_input.min().item():.4f}")
+                        print(f"- Max: {valid_input.max().item():.4f}")
+                        print(f"- Mean: {valid_input.mean().item():.4f}")
+                        print(f"- Std: {valid_input.std().item():.4f}")
+                    print(f"NaN percentage: {100 * torch.isnan(output).float().mean().item():.2f}%")
+                
+                # Check for extreme values
+                if not torch.isnan(output).all():
+                    max_val = torch.abs(output[~torch.isnan(output)]).max().item()
+                    if max_val > 100:
+                        print(f"\nLarge values after {name} (layer {i})")
+                        print(f"Max absolute value: {max_val:.4f}")
+
+            # Verify final output shape
+            if output.shape != (B, 7, 5, 5):
+                print(f"Unexpected shape: got {output.shape}, expected {(B, 7, 5, 5)}")
 
             # Add verification
             if self.training:  # only check during training to save computation
