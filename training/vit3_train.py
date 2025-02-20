@@ -515,14 +515,21 @@ class ViTTrainer:
 
         return avg_loss, avg_main_loss, avg_smooth_loss, metrics
     
-    def save_checkpoint(self, epoch, train_metrics, val_metrics=None, is_best=False):
+    def save_checkpoint(self, epoch, metrics, is_best=False):
+        """
+        Save model checkpoint with metrics
+        
+        Args:
+            epoch: Current epoch number
+            metrics: Dictionary containing 'train' and 'val' metrics
+            is_best: Whether this is the best model so far
+        """
         checkpoint = {
             'epoch': epoch,
             'model_state_dict': self.model.state_dict(),
             'optimizer_state_dict': self.optimizer.state_dict(),
             'scheduler_state_dict': self.scheduler.state_dict(),
-            'train_metrics': train_metrics,
-            'val_metrics': val_metrics,
+            'metrics': metrics
         }
         
         checkpoint_path = self.results_dir / f'checkpoint_epoch_{epoch}.pth'
@@ -530,7 +537,8 @@ class ViTTrainer:
         print(f"Saved checkpoint to {checkpoint_path}")
 
         # Track best models
-        if val_metrics is not None:
+        if metrics.get('val') is not None:  # If we have validation metrics
+            val_metrics = metrics['val']
             current_r2 = val_metrics['overall_r2']
             current_mae = val_metrics['overall_mae']
             current_accuracy = val_metrics['overall_accuracy']
