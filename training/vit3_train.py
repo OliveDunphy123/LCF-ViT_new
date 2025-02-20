@@ -59,7 +59,7 @@ from data.my_whole_dataset import create_yearly_15_dataloader
 
 def calculate_accuracy_metrics(predictions, ground_truth):
     """
-    Calculate accuracy metrics for land cover fraction predictions
+    Calculate comprehensive accuracy metrics for land cover fraction predictions
     
     Args:
         predictions: tensor of shape [B, 7, T, 5, 5] 
@@ -72,47 +72,87 @@ def calculate_accuracy_metrics(predictions, ground_truth):
     pred_flat = predictions.flatten()
     truth_flat = ground_truth.flatten()
     
-    # Overall R²
-    ss_tot = torch.sum((truth_flat - torch.mean(truth_flat))**2)
+    # Overall R² calculation with improved numerical stability
+    truth_mean = torch.mean(truth_flat)
+    ss_tot = torch.sum((truth_flat - truth_mean)**2)
     ss_res = torch.sum((truth_flat - pred_flat)**2)
-    overall_r2 = 1 - (ss_res / (ss_tot + 1e-8))
+    ss_reg = torch.sum((pred_flat - truth_mean)**2)
+    overall_r2 = ss_reg / (ss_tot + 1e-8)
     
     # Overall MAE and RMSE
     overall_mae = torch.mean(torch.abs(pred_flat - truth_flat))
     overall_rmse = torch.sqrt(torch.mean((pred_flat - truth_flat)**2))
     
-    # Mean Absolute Error for each class
-    mae_per_class = torch.mean(torch.abs(predictions - ground_truth), dim=(0,2,3,4))
+    # Normalized RMSE
+    value_range = torch.max(truth_flat) - torch.min(truth_flat)
+    normalized_rmse = overall_rmse / value_range if value_range != 0 else 0.0
     
-    # Root Mean Square Error for each class
-    rmse_per_class = torch.sqrt(torch.mean((predictions - ground_truth)**2, dim=(0,2,3,4)))
+    # Mean Bias Error
+    mean_bias = torch.mean(pred_flat - truth_flat)
     
-    # Overall accuracy (considering predictions within 10% of ground truth as correct)
-    tolerance = 0.05
+    # Reshape tensors for per-class metrics [N, 7] where N = B * T * 5 * 5
+    pred_reshaped = predictions.permute(0, 2, 3, 4, 1).reshape(-1, 7)
+    truth_reshaped = ground_truth.permute(0, 2, 3, 4, 1).reshape(-1, 7)
+    
+    # MAE and RMSE per class
+    mae_per_class = torch.mean(torch.abs(pred_reshaped - truth_reshaped), dim=0)
+    rmse_per_class = torch.sqrt(torch.mean((pred_reshaped - truth_reshaped)**2, dim=0))
+    
+    # Accuracy with tolerance
+    tolerance = 0.05  # 5% tolerance
     correct_predictions = torch.abs(predictions - ground_truth) <= tolerance
     overall_accuracy = torch.mean(correct_predictions.float())
     
-    # R² score for each class
+    # R² score and correlation for each class
     r2_scores = []
-    for class_idx in range(7):
-        y_true = ground_truth[:,class_idx].flatten()
-        y_pred = predictions[:,class_idx].flatten()
-        
-        ss_tot = torch.sum((y_true - torch.mean(y_true))**2)
-        ss_res = torch.sum((y_true - y_pred)**2)
-        
-        r2 = 1 - (ss_res / (ss_tot + 1e-8))
-        r2_scores.append(r2.item())
+    correlations = []
     
-    return {
-        'overall_accuracy': overall_accuracy.item(),
-        'overall_r2': overall_r2.item(),
-        'overall_mae': overall_mae.item(),
-        'overall_rmse': overall_rmse.item(),
+    for class_idx in range(7):
+        y_true = truth_reshaped[:, class_idx]
+        y_pred = pred_reshaped[:, class_idx]
+        
+        # R² calculation
+        y_mean = torch.mean(y_true)
+        ss_tot = torch.sum((y_true - y_mean)**2)
+        ss_res = torch.sum((y_true - y_pred)**2)
+        ss_reg = torch.sum((y_pred - y_mean)**2)
+        
+        if ss_tot == 0:  # Handle edge case
+            r2 = 1.0 if torch.allclose(y_true, y_pred) else 0.0
+        else:
+            r2 = ss_reg / (ss_tot + 1e-8)
+        
+        r2_scores.append(float(r2))
+        
+        # Correlation calculation
+        try:
+            corr_matrix = torch.corrcoef(torch.stack([y_true, y_pred]))
+            correlation = corr_matrix[0, 1]
+        except:
+            correlation = torch.tensor(float('nan'))
+        correlations.append(float(correlation))
+    
+    # Fraction sum constraint validation
+    fraction_sum = torch.sum(predictions, dim=1)  # Sum across classes
+    fraction_error = torch.abs(fraction_sum - 1.0)
+    fraction_constraint = torch.mean(fraction_error)
+    
+    # Compile all metrics
+    metrics = {
+        'overall_accuracy': float(overall_accuracy),
+        'overall_r2': float(overall_r2),
+        'overall_mae': float(overall_mae),
+        'overall_rmse': float(overall_rmse),
+        'normalized_rmse': float(normalized_rmse),
+        'mean_bias_error': float(mean_bias),
         'mae_per_class': mae_per_class,
         'rmse_per_class': rmse_per_class,
-        'r2_scores': r2_scores
+        'r2_scores': r2_scores,
+        'correlations_per_class': correlations,
+        'fraction_constraint_error': float(fraction_constraint)
     }
+    
+    return metrics
 
 class ViTTrainer:
     def __init__(
@@ -120,8 +160,8 @@ class ViTTrainer:
         model,
         train_loader,
         val_loader=None,
-        learning_rate=1e-4,
-        weight_decay=1e-2,
+        learning_rate=5e-5,
+        weight_decay=1e-3,
         device='cuda',
         num_epochs=50,
         criterion=None,
@@ -160,17 +200,21 @@ class ViTTrainer:
         # Add custom scalar groups
         self.writer.add_custom_scalars({
             'Training': {
-                'losses': ['Multiline', [
-                    'Loss/train_total',
-                    'Loss/train_main',
-                    'Loss/train_smooth'
+                'losses': ['Multiline', ['Loss/train_total', 'Loss/train_main', 'Loss/train_smooth']],
+                'accuracy_metrics': ['Multiline', [
+                    'Train/overall_accuracy',
+                    'Train/overall_r2',
+                    'Train/normalized_rmse',
+                    'Train/fraction_constraint_error'
                 ]],
             },
             'Validation': {
-                'losses': ['Multiline', [
-                    'Loss/val_total',
-                    'Loss/val_main',
-                    'Loss/val_smooth'
+                'losses': ['Multiline', ['Loss/val_total', 'Loss/val_main', 'Loss/val_smooth']],
+                'accuracy_metrics': ['Multiline', [
+                    'Val/overall_accuracy',
+                    'Val/overall_r2',
+                    'Val/normalized_rmse',
+                    'Val/fraction_constraint_error'
                 ]],
             },
             'Learning_Rate': {
@@ -187,11 +231,11 @@ class ViTTrainer:
 
         # Optimizer with different learning rates for different components
         para_groups=[
-                {'params': model.patch_embed.parameters(), 'lr': learning_rate * 0.2},
-                {'params': model.blocks.parameters(), 'lr': learning_rate * 1.5},
-                {'params': model.year_embedding.parameters(), 'lr': learning_rate * 5},  # Changed from temporal_embed
-                {'params': model.year_proj.parameters(), 'lr': learning_rate * 5},      # Added year_proj
-                {'params': model.regression_head.parameters(), 'lr': learning_rate * 10},
+                {'params': model.patch_embed.parameters(), 'lr': learning_rate * 0.5},
+                {'params': model.blocks.parameters(), 'lr': learning_rate * 1.0},
+                {'params': model.year_embedding.parameters(), 'lr': learning_rate * 2.0},  # Changed from temporal_embed
+                {'params': model.year_proj.parameters(), 'lr': learning_rate * 2.0},      # Added year_proj
+                {'params': model.regression_head.parameters(), 'lr': learning_rate * 5.0},
             ]
 
         self.optimizer = optim.AdamW(para_groups, weight_decay=weight_decay)
@@ -204,9 +248,9 @@ class ViTTrainer:
                 self.optimizer,
                 max_lr=max_lrs,
                 total_steps=total_steps,
-                pct_start=0.3,
-                div_factor=20,
-                final_div_factor=1e3,
+                pct_start=0.2,
+                div_factor=25,
+                final_div_factor=1e4,
                 anneal_strategy='cos'
             )
         elif scheduler_type == 'cosine':
@@ -221,15 +265,35 @@ class ViTTrainer:
         print(f"Initialized trainer. Training results will be saved to: {self.results_dir}")
 
 
+    # def criterion(self, pred, target):
+    #     """Combined loss function"""
+    #     if self.custom_criterion is not None:
+    #         return self.custom_criterion(pred, target)
+        
+    #     # Default loss if no custom criterion provided
+    #     mse = self.mse_loss(pred, target)
+    #     l1 = self.l1_loss(pred, target)
+    #     return 0.7 * mse + 0.3 * l1
+
     def criterion(self, pred, target):
-        """Combined loss function"""
+        """Enhanced loss function with fraction constraints"""
         if self.custom_criterion is not None:
             return self.custom_criterion(pred, target)
         
-        # Default loss if no custom criterion provided
+        # Basic losses
         mse = self.mse_loss(pred, target)
         l1 = self.l1_loss(pred, target)
-        return 0.7 * mse + 0.3 * l1
+        
+        # Fraction sum constraint
+        fraction_sum = torch.sum(pred, dim=1)  # Sum should be 1
+        sum_constraint = torch.mean((fraction_sum - 1.0)**2)
+        
+        # Non-negative constraint
+        non_negative = torch.mean(torch.relu(-pred))
+        
+        # Combine losses
+        total_loss = 0.5 * mse + 0.3 * l1 + 0.15 * sum_constraint + 0.05 * non_negative
+        return total_loss
 
     def temporal_smoothness_loss(self, pred):
         """Calculate temporal smoothness loss"""
@@ -251,7 +315,7 @@ class ViTTrainer:
             ground_truth = batch['ground_truth'].to(self.device)
             
             # Add noise augmentation
-            noise = torch.randn_like(sentinel_data) * 0.005
+            noise = torch.randn_like(sentinel_data) * 0.01
             sentinel_data = sentinel_data + noise
 
             self.optimizer.zero_grad()
@@ -304,16 +368,26 @@ class ViTTrainer:
         epoch_ground_truth = torch.cat(epoch_ground_truth, dim=0)
         metrics = calculate_accuracy_metrics(epoch_predictions, epoch_ground_truth)
         
-        # Log epoch metrics
+        # Log epoch metrics to TensorBoard
         self.writer.add_scalar('Train/overall_accuracy', metrics['overall_accuracy'], epoch)
         self.writer.add_scalar('Train/overall_r2', metrics['overall_r2'], epoch)
         self.writer.add_scalar('Train/overall_mae', metrics['overall_mae'], epoch)
         self.writer.add_scalar('Train/overall_rmse', metrics['overall_rmse'], epoch)
+        self.writer.add_scalar('Train/normalized_rmse', metrics['normalized_rmse'], epoch)
+        self.writer.add_scalar('Train/mean_bias_error', metrics['mean_bias_error'], epoch)
+        self.writer.add_scalar('Train/fraction_constraint_error', metrics['fraction_constraint_error'], epoch)
 
-        for i, mae in enumerate(metrics['mae_per_class']):
+        # Log per-class metrics
+        for i, (mae, rmse, r2, corr) in enumerate(zip(
+            metrics['mae_per_class'],
+            metrics['rmse_per_class'],
+            metrics['r2_scores'],
+            metrics['correlations_per_class']
+        )):
             self.writer.add_scalar(f'Train/mae_class_{i}', mae, epoch)
-        for i, r2 in enumerate(metrics['r2_scores']):
+            self.writer.add_scalar(f'Train/rmse_class_{i}', rmse, epoch)
             self.writer.add_scalar(f'Train/r2_class_{i}', r2, epoch)
+            self.writer.add_scalar(f'Train/correlation_class_{i}', corr, epoch)
         
         # Calculate average losses
         avg_loss = total_loss / len(self.train_loader)
@@ -325,18 +399,20 @@ class ViTTrainer:
         self.writer.add_scalar('Loss/train_main', avg_main_loss, epoch)
         self.writer.add_scalar('Loss/train_smooth', avg_smooth_loss, epoch)
 
-        # print(f"\nEpoch {epoch} Training Metrics:")
-        # print(f"Overall Accuracy: {metrics['overall_accuracy']:.4f}")
-        # print("MAE per class:", ' '.join(f"{mae:.4f}" for mae in metrics['mae_per_class']))
-        # print("R² scores:", ' '.join(f"{r2:.4f}" for r2 in metrics['r2_scores']))
+        # Print epoch metrics
         print(f"\nEpoch {epoch} Training Metrics:")
+        print(f"Loss: {avg_loss:.4f} (Main: {avg_main_loss:.4f}, Smooth: {avg_smooth_loss:.4f})")
         print(f"Overall Accuracy: {metrics['overall_accuracy']:.4f}")
         print(f"Overall R²: {metrics['overall_r2']:.4f}")
         print(f"Overall MAE: {metrics['overall_mae']:.4f}")
         print(f"Overall RMSE: {metrics['overall_rmse']:.4f}")
+        print(f"Normalized RMSE: {metrics['normalized_rmse']:.4f}")
+        print(f"Mean Bias Error: {metrics['mean_bias_error']:.4f}")
+        print(f"Fraction Constraint Error: {metrics['fraction_constraint_error']:.4f}")
         print("MAE per class:", ' '.join(f"{mae:.4f}" for mae in metrics['mae_per_class']))
         print("RMSE per class:", ' '.join(f"{rmse:.4f}" for rmse in metrics['rmse_per_class']))
         print("R² scores:", ' '.join(f"{r2:.4f}" for r2 in metrics['r2_scores']))
+        print("Correlations:", ' '.join(f"{corr:.4f}" for corr in metrics['correlations_per_class']))
 
         return avg_loss, avg_main_loss, avg_smooth_loss, metrics
 
@@ -399,11 +475,21 @@ class ViTTrainer:
         self.writer.add_scalar('Val/overall_r2', metrics['overall_r2'], epoch)
         self.writer.add_scalar('Val/overall_mae', metrics['overall_mae'], epoch)
         self.writer.add_scalar('Val/overall_rmse', metrics['overall_rmse'], epoch)
+        self.writer.add_scalar('Val/normalized_rmse', metrics['normalized_rmse'], epoch)
+        self.writer.add_scalar('Val/mean_bias_error', metrics['mean_bias_error'], epoch)
+        self.writer.add_scalar('Val/fraction_constraint_error', metrics['fraction_constraint_error'], epoch)
 
-        for i, mae in enumerate(metrics['mae_per_class']):
+    # Log per-class validation metrics
+        for i, (mae, rmse, r2, corr) in enumerate(zip(
+            metrics['mae_per_class'],
+            metrics['rmse_per_class'],
+            metrics['r2_scores'],
+            metrics['correlations_per_class']
+        )):
             self.writer.add_scalar(f'Val/mae_class_{i}', mae, epoch)
-        for i, r2 in enumerate(metrics['r2_scores']):
+            self.writer.add_scalar(f'Val/rmse_class_{i}', rmse, epoch)
             self.writer.add_scalar(f'Val/r2_class_{i}', r2, epoch)
+            self.writer.add_scalar(f'Val/correlation_class_{i}', corr, epoch)
 
 
         # print(f"\nEpoch {epoch} Validation Metrics:")
@@ -412,38 +498,62 @@ class ViTTrainer:
         # print("MAE per class:", ' '.join(f"{mae:.4f}" for mae in metrics['mae_per_class']))
         # print("R² scores:", ' '.join(f"{r2:.4f}" for r2 in metrics['r2_scores']))
         
+        # Print validation metrics
         print(f"\nEpoch {epoch} Validation Metrics:")
         print(f"Loss: {avg_loss:.4f} (Main: {avg_main_loss:.4f}, Smooth: {avg_smooth_loss:.4f})")
         print(f"Overall Accuracy: {metrics['overall_accuracy']:.4f}")
         print(f"Overall R²: {metrics['overall_r2']:.4f}")
         print(f"Overall MAE: {metrics['overall_mae']:.4f}")
         print(f"Overall RMSE: {metrics['overall_rmse']:.4f}")
+        print(f"Normalized RMSE: {metrics['normalized_rmse']:.4f}")
+        print(f"Mean Bias Error: {metrics['mean_bias_error']:.4f}")
+        print(f"Fraction Constraint Error: {metrics['fraction_constraint_error']:.4f}")
         print("MAE per class:", ' '.join(f"{mae:.4f}" for mae in metrics['mae_per_class']))
         print("RMSE per class:", ' '.join(f"{rmse:.4f}" for rmse in metrics['rmse_per_class']))
         print("R² scores:", ' '.join(f"{r2:.4f}" for r2 in metrics['r2_scores']))
+        print("Correlations:", ' '.join(f"{corr:.4f}" for corr in metrics['correlations_per_class']))
 
         return avg_loss, avg_main_loss, avg_smooth_loss, metrics
     
-    def save_checkpoint(self, epoch, train_loss, metrics, val_loss=None, is_best=False):
+    def save_checkpoint(self, epoch, train_metrics, val_metrics=None, is_best=False):
         checkpoint = {
             'epoch': epoch,
             'model_state_dict': self.model.state_dict(),
             'optimizer_state_dict': self.optimizer.state_dict(),
             'scheduler_state_dict': self.scheduler.state_dict(),
-            'train_loss': train_loss,
-            'val_loss': val_loss,
-            'metrics': metrics
+            'train_metrics': train_metrics,
+            'val_metrics': val_metrics,
         }
         
         checkpoint_path = self.results_dir / f'checkpoint_epoch_{epoch}.pth'
         torch.save(checkpoint, checkpoint_path)
         print(f"Saved checkpoint to {checkpoint_path}")
 
-        # Save best model if applicable
-        if is_best:
-            best_model_path = self.results_dir / 'best_model.pth'
-            torch.save(checkpoint, best_model_path)
-            print(f"Saved best model with loss: {train_loss:.4f}")
+        # Track best models
+        if val_metrics is not None:
+            current_r2 = val_metrics['overall_r2']
+            current_mae = val_metrics['overall_mae']
+            current_accuracy = val_metrics['overall_accuracy']
+            
+            # Save best R² model
+            if is_best:
+                best_r2_path = self.results_dir / 'best_r2_model.pth'
+                torch.save(checkpoint, best_r2_path)
+                print(f"Saved best R² model with score: {current_r2:.4f}")
+            
+            # Save best MAE model 
+            if current_mae < getattr(self, 'best_mae', float('inf')):
+                self.best_mae = current_mae
+                best_mae_path = self.results_dir / 'best_mae_model.pth'
+                torch.save(checkpoint, best_mae_path)
+                print(f"Saved best MAE model with score: {current_mae:.4f}")
+                
+            # Save best accuracy model
+            if current_accuracy > getattr(self, 'best_accuracy', float('-inf')):
+                self.best_accuracy = current_accuracy
+                best_accuracy_path = self.results_dir / 'best_accuracy_model.pth'
+                torch.save(checkpoint, best_accuracy_path)
+                print(f"Saved best accuracy model with score: {current_accuracy:.4f}")
 
     def train(self):
         """Main training loop"""
@@ -536,14 +646,14 @@ def main():
         #base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart",
         base_path="/lustre/scratch/WUR/ESG/xu116",
         split="Training",
-        batch_size=32
+        batch_size=16
     )
     
     val_loader = create_yearly_15_dataloader(
         #base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart", 
         base_path="/lustre/scratch/WUR/ESG/xu116",
         split="Val_set",
-        batch_size=32
+        batch_size=16
     )
     
     trainer = ViTTrainer(

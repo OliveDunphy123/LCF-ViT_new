@@ -203,7 +203,7 @@ class PatchEmbed(nn.Module):
 
 class SentinelViT(nn.Module):
     def __init__(self, img_size=15, patch_size=3, in_chans=10, embed_dim=384, depth=12,
-                 num_heads=6, mlp_ratio=4., qkv_bias=True, qk_scale=None, drop_rate=0.1,
+                 num_heads=6, mlp_ratio=4, qkv_bias=True, qk_scale=None, drop_rate=0.1,
                  attn_drop_rate=0.1, drop_path_rate=0.1, norm_layer=partial(nn.LayerNorm, eps=1e-6)):
     
         super().__init__()
