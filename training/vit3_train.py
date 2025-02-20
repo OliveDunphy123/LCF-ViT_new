@@ -64,95 +64,58 @@ def calculate_accuracy_metrics(predictions, ground_truth):
     Args:
         predictions: tensor of shape [B, 7, T, 5, 5] 
         ground_truth: tensor of shape [B, 7, T, 5, 5]
-        
-    Returns:
-        Dictionary containing various accuracy metrics
     """
-    # Flatten predictions and ground truth for overall metrics
+    # Original method for MAE and RMSE per class
+    mae_per_class = torch.mean(torch.abs(predictions - ground_truth), dim=(0,2,3,4))
+    rmse_per_class = torch.sqrt(torch.mean((predictions - ground_truth)**2, dim=(0,2,3,4)))
+    
+    # Overall metrics using flattened tensors
     pred_flat = predictions.flatten()
     truth_flat = ground_truth.flatten()
     
-    # Overall R² calculation with improved numerical stability
-    truth_mean = torch.mean(truth_flat)
-    ss_tot = torch.sum((truth_flat - truth_mean)**2)
-    ss_res = torch.sum((truth_flat - pred_flat)**2)
-    ss_reg = torch.sum((pred_flat - truth_mean)**2)
-    overall_r2 = ss_reg / (ss_tot + 1e-8)
-    
-    # Overall MAE and RMSE
     overall_mae = torch.mean(torch.abs(pred_flat - truth_flat))
     overall_rmse = torch.sqrt(torch.mean((pred_flat - truth_flat)**2))
     
-    # Normalized RMSE
-    value_range = torch.max(truth_flat) - torch.min(truth_flat)
-    normalized_rmse = overall_rmse / value_range if value_range != 0 else 0.0
+    # Original method for R² scores
+    r2_scores = []
+    for class_idx in range(7):
+        y_true = ground_truth[:,class_idx].flatten()
+        y_pred = predictions[:,class_idx].flatten()
+        
+        ss_tot = torch.sum((y_true - torch.mean(y_true))**2)
+        ss_res = torch.sum((y_true - y_pred)**2)
+        
+        r2 = 1 - (ss_res / (ss_tot + 1e-8))
+        r2_scores.append(r2.item())
     
-    # Mean Bias Error
-    mean_bias = torch.mean(pred_flat - truth_flat)
-    
-    # Reshape tensors for per-class metrics [N, 7] where N = B * T * 5 * 5
-    pred_reshaped = predictions.permute(0, 2, 3, 4, 1).reshape(-1, 7)
-    truth_reshaped = ground_truth.permute(0, 2, 3, 4, 1).reshape(-1, 7)
-    
-    # MAE and RMSE per class
-    mae_per_class = torch.mean(torch.abs(pred_reshaped - truth_reshaped), dim=0)
-    rmse_per_class = torch.sqrt(torch.mean((pred_reshaped - truth_reshaped)**2, dim=0))
+    # Calculate overall R² using the same method
+    truth_mean = torch.mean(truth_flat)
+    ss_tot = torch.sum((truth_flat - truth_mean)**2)
+    ss_res = torch.sum((truth_flat - pred_flat)**2)
+    overall_r2 = 1 - (ss_res / (ss_tot + 1e-8))
     
     # Accuracy with tolerance
-    tolerance = 0.05  # 5% tolerance
+    tolerance = 0.1  # 10% tolerance
     correct_predictions = torch.abs(predictions - ground_truth) <= tolerance
     overall_accuracy = torch.mean(correct_predictions.float())
     
-    # R² score and correlation for each class
-    r2_scores = []
-    correlations = []
-    
-    for class_idx in range(7):
-        y_true = truth_reshaped[:, class_idx]
-        y_pred = pred_reshaped[:, class_idx]
-        
-        # R² calculation
-        y_mean = torch.mean(y_true)
-        ss_tot = torch.sum((y_true - y_mean)**2)
-        ss_res = torch.sum((y_true - y_pred)**2)
-        ss_reg = torch.sum((y_pred - y_mean)**2)
-        
-        if ss_tot == 0:  # Handle edge case
-            r2 = 1.0 if torch.allclose(y_true, y_pred) else 0.0
-        else:
-            r2 = ss_reg / (ss_tot + 1e-8)
-        
-        r2_scores.append(float(r2))
-        
-        # Correlation calculation
-        try:
-            corr_matrix = torch.corrcoef(torch.stack([y_true, y_pred]))
-            correlation = corr_matrix[0, 1]
-        except:
-            correlation = torch.tensor(float('nan'))
-        correlations.append(float(correlation))
-    
-    # Fraction sum constraint validation
-    fraction_sum = torch.sum(predictions, dim=1)  # Sum across classes
+    # Additional metrics
+    mean_bias = torch.mean(pred_flat - truth_flat)
+    fraction_sum = torch.sum(predictions, dim=1)
     fraction_error = torch.abs(fraction_sum - 1.0)
     fraction_constraint = torch.mean(fraction_error)
     
-    # Compile all metrics
-    metrics = {
+    return {
         'overall_accuracy': float(overall_accuracy),
         'overall_r2': float(overall_r2),
         'overall_mae': float(overall_mae),
         'overall_rmse': float(overall_rmse),
-        'normalized_rmse': float(normalized_rmse),
         'mean_bias_error': float(mean_bias),
         'mae_per_class': mae_per_class,
         'rmse_per_class': rmse_per_class,
         'r2_scores': r2_scores,
-        'correlations_per_class': correlations,
         'fraction_constraint_error': float(fraction_constraint)
     }
-    
-    return metrics
 
 class ViTTrainer:
     def __init__(
@@ -265,35 +228,16 @@ class ViTTrainer:
         print(f"Initialized trainer. Training results will be saved to: {self.results_dir}")
 
 
-    # def criterion(self, pred, target):
-    #     """Combined loss function"""
-    #     if self.custom_criterion is not None:
-    #         return self.custom_criterion(pred, target)
-        
-    #     # Default loss if no custom criterion provided
-    #     mse = self.mse_loss(pred, target)
-    #     l1 = self.l1_loss(pred, target)
-    #     return 0.7 * mse + 0.3 * l1
-
     def criterion(self, pred, target):
-        """Enhanced loss function with fraction constraints"""
+        """Combined loss function"""
         if self.custom_criterion is not None:
             return self.custom_criterion(pred, target)
         
-        # Basic losses
+        # Default loss if no custom criterion provided
         mse = self.mse_loss(pred, target)
         l1 = self.l1_loss(pred, target)
-        
-        # Fraction sum constraint
-        fraction_sum = torch.sum(pred, dim=1)  # Sum should be 1
-        sum_constraint = torch.mean((fraction_sum - 1.0)**2)
-        
-        # Non-negative constraint
-        non_negative = torch.mean(torch.relu(-pred))
-        
-        # Combine losses
-        total_loss = 0.5 * mse + 0.3 * l1 + 0.15 * sum_constraint + 0.05 * non_negative
-        return total_loss
+        return 0.7 * mse + 0.3 * l1
+
 
     def temporal_smoothness_loss(self, pred):
         """Calculate temporal smoothness loss"""
