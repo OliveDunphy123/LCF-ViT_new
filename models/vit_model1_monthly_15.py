@@ -276,15 +276,13 @@ class SentinelViT(nn.Module):
             nn.Dropout(0.1),
             nn.Linear(256, 7 * 25),  # 7 fractions * (5x5) spatial output
             Lambda(lambda x: x.view(-1, 7, 5, 5)),  # [B, 7, 5, 5]
-            #Lambda(lambda x: torch.softmax(x, dim=1))  # Ensures fractions sum to 1 at each pixel
-            nn.Softmax(dim=1)
+            Lambda(lambda x: torch.softmax(x, dim=1))  # Ensures fractions sum to 1 at each pixel
+            #nn.Softmax(dim=1)
         )
 
         # Initialize weights
         self._init_weights()
 
-    
-    
     def _init_weights(self):
         
         # Initialize patch_embed

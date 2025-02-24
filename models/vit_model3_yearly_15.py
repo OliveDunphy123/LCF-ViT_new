@@ -271,7 +271,8 @@ class SentinelViT(nn.Module):
             nn.Dropout(0.1),
             nn.Linear(256, 7 * 25),  # 7 fractions * (5x5) spatial output
             Lambda(lambda x: x.reshape(-1, 7, 5, 5)),  # [B, 7, 5, 5]
-            Lambda(lambda x: F.softmax(x, dim=1))  # Ensures fractions sum to 1 at each pixel
+            Lambda(lambda x: torch.softmax(x, dim=1))  # Ensures fractions sum to 1 at each pixel
+            #nn.Softmax(dim=1)
         )
 
         # Initialize weights
@@ -480,15 +481,16 @@ class SentinelViT(nn.Module):
             tokens[:, 0] = tokens[:, 0] + year_embed
             
             # Process through transformer blocks
-            if self.training:
-                for blk in self.blocks:
-                    tokens = torch.utils.checkpoint.checkpoint(blk, tokens)
-            else:
-                for blk in self.blocks:
-                    tokens = blk(tokens)
-                    #if i == 0:  # Print shape after first block
-                        #print(f"After first transformer block: {tokens.shape}")  # [B, 26, 384]
-            
+            # if self.training:
+            #     for blk in self.blocks:
+            #         tokens = torch.utils.checkpoint.checkpoint(blk, tokens)
+            # else:
+            #     for blk in self.blocks:
+            #         tokens = blk(tokens)
+            #         #if i == 0:  # Print shape after first block
+            #             #print(f"After first transformer block: {tokens.shape}")  # [B, 26, 384]
+            for blk in self.blocks:
+                tokens = blk(tokens)
             # Extract features
             features = self.norm(tokens)[:, 0]
             #print(f"After extracting CLS token: {features.shape}")  # [B, 384]
