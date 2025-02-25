@@ -249,7 +249,7 @@ class ViTTrainer:
 
         # Optimizer with different learning rates for different components
         para_groups=[
-                {'params': model.patch_embed.parameters(), 'lr': learning_rate * 0.2}, #Increased from 0.2
+                {'params': model.patch_embed.parameters(), 'lr': learning_rate * 0.5}, #Increased from 0.2
                 {'params': model.blocks.parameters(), 'lr': learning_rate * 2}, # Reduced from 1.5
                 {'params': model.year_embedding.parameters(), 'lr': learning_rate * 10},  # Changed from temporal_embed. reduced from 5
                 {'params': model.year_proj.parameters(), 'lr': learning_rate * 10},      # Added year_proj, reduced from 5
@@ -511,7 +511,7 @@ class ViTTrainer:
            # Log gradients periodically
             if batch_idx % 10 == 0:
                 for name, param in self.model.named_parameters():
-                    if param.grad is not None:
+                    if param.grad is not None and torch.any(param.grad):
                         self.writer.add_histogram(f'gradients/{name}', param.grad, global_step)
 
                 # Clear memory
