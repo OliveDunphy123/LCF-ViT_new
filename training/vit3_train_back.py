@@ -121,7 +121,7 @@ class ViTTrainer:
         train_loader,
         val_loader=None,
         learning_rate=1e-4,
-        weight_decay=1e-2,
+        weight_decay=1e-4,
         device='cuda',
         num_epochs=50,
         criterion=None,
@@ -251,7 +251,7 @@ class ViTTrainer:
             ground_truth = batch['ground_truth'].to(self.device)
             
             # Add noise augmentation
-            noise = torch.randn_like(sentinel_data) * 0.005
+            noise = torch.randn_like(sentinel_data) * 0.01
             sentinel_data = sentinel_data + noise
 
             self.optimizer.zero_grad()
@@ -260,7 +260,7 @@ class ViTTrainer:
             # Calculate losses
             main_loss = self.criterion(predictions, ground_truth)
             smooth_loss = self.temporal_smoothness_loss(predictions)
-            smooth_weight = min(0.3, 0.05+epoch * 0.005)
+            smooth_weight = min(0.5, 0.1+epoch * 0.01)
             loss = main_loss + smooth_weight * smooth_loss
             
             loss.backward()
@@ -391,6 +391,7 @@ class ViTTrainer:
         avg_smooth_loss = total_smooth_loss / n_batches
 
         # Log validation metrics
+        self.writer.add_scalar('Val/loss', total_loss / len(self.val_loader), epoch)
         self.writer.add_scalar('Loss/val_total', avg_loss, epoch)
         self.writer.add_scalar('Loss/val_main', avg_main_loss, epoch)
         self.writer.add_scalar('Loss/val_smooth', avg_smooth_loss, epoch)
