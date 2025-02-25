@@ -297,11 +297,21 @@ class SentinelViT(nn.Module):
         # nn.init.trunc_normal_(self.temporal_embed, std=.02)
 
         #Initialize regression head 
+        # for m in self.regression_head.modules():
+        #     if isinstance(m, nn.Linear):
+        #         nn.init.trunc_normal_(m.weight, std=.02)
+        #         if m.bias is not None:
+        #             nn.init.constant_(m.bias, 0)
         for m in self.regression_head.modules():
             if isinstance(m, nn.Linear):
-                nn.init.trunc_normal_(m.weight, std=.02)
+                if m is self.regression_head[-3]:  # Last linear layer
+                    # Initialize last layer with smaller weights
+                    nn.init.trunc_normal_(m.weight, std=.01)
+                else:
+                    nn.init.trunc_normal_(m.weight, std=.02)
+                
                 if m.bias is not None:
-                    nn.init.constant_(m.bias, 0)
+                    nn.init.zeros_(m.bias)
     
     def _resize_pos_embed(self, pos_embed):
         """Resize position embeddings to match current model size"""

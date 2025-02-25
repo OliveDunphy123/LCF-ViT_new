@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, Subset
-import torch.nn.functional as F
 from tqdm import tqdm
 from datetime import datetime
 from pathlib import Path
@@ -286,38 +285,15 @@ class ViTTrainer:
         print(f"Initialized trainer. Training results will be saved to: {self.results_dir}")
 
 
-    # def criterion(self, pred, target):
-    #     """Combined loss function"""
-    #     if self.custom_criterion is not None:
-    #         return self.custom_criterion(pred, target)
-        
-    #     # Default loss if no custom criterion provided
-    #     mse = self.mse_loss(pred, target)
-    #     l1 = self.l1_loss(pred, target)
-    #     return 0.7 * mse + 0.3 * l1
     def criterion(self, pred, target):
-        """Combined loss function with KL-divergence"""
+        """Combined loss function"""
         if self.custom_criterion is not None:
             return self.custom_criterion(pred, target)
         
-        # Default losses
+        # Default loss if no custom criterion provided
         mse = self.mse_loss(pred, target)
         l1 = self.l1_loss(pred, target)
-        
-        # Add KL-divergence loss for better fraction prediction
-        # Reshape tensors to compute KL divergence across the fraction dimension
-        pred_reshaped = pred.permute(0, 2, 3, 4, 1).reshape(-1, 7)
-        target_reshaped = target.permute(0, 2, 3, 4, 1).reshape(-1, 7)
-        
-        # Apply softmax to ensure valid probability distributions
-        pred_probs = F.log_softmax(pred_reshaped, dim=-1)
-        target_probs = F.softmax(target_reshaped, dim=-1)
-        
-        # Compute KL divergence
-        kl_loss = F.kl_div(pred_probs, target_probs, reduction='batchmean')
-        
-        # Weighted combination of losses
-        return 0.5 * mse + 0.3 * l1 + 0.2 * kl_loss
+        return 0.7 * mse + 0.3 * l1
 
     def temporal_smoothness_loss(self, pred):
         """Calculate temporal smoothness loss"""
@@ -469,7 +445,7 @@ class ViTTrainer:
                 predictions = self.model(sentinel_data)
                 main_loss = self.criterion(predictions, ground_truth)
                 smooth_loss = self.temporal_smoothness_loss(predictions)
-                smooth_weight = min(0.5, 0.1 + epoch * 0.01)
+                smooth_weight = min(0.3, 0.05 + epoch * 0.005)
                 loss = main_loss + smooth_weight * smooth_loss
 
 
@@ -832,116 +808,10 @@ class ViTTrainer:
                 torch.save(checkpoint, best_accuracy_path)
                 print(f"Saved best accuracy model with score: {current_accuracy:.4f}")
 
-    # def train(self):
-    #     """Main training loop"""
-    #     print(f"\nStarting training for {self.num_epochs} epochs...")
-        
-    #     train_losses = []
-    #     val_losses = []
-    #     best_loss = float('inf')
-    #     best_accuracy = 0.0
-
-    #     for epoch in range(1, self.num_epochs + 1):
-    #         print(f"\nEpoch {epoch}/{self.num_epochs}")
-            
-    #         train_loss, train_main_loss, train_smooth_loss, train_metrics = self.train_epoch(epoch)
-    #         print(f"Train Loss: {train_loss:.4f} (Main: {train_main_loss:.4f}, Smooth: {train_smooth_loss:.4f})")
-            
-
-    #         # Validation
-    #         if self.val_loader is not None:
-    #             val_loss, val_main_loss, val_smooth_loss, val_metrics = self.validate(epoch)
-    #             current_accuracy = val_metrics['overall_accuracy']
-    #             print(f"Val Loss: {val_loss:.4f} (Main: {val_main_loss:.4f}, Smooth: {val_smooth_loss:.4f})")
-    #         else:
-    #             val_loss = None
-    #             current_accuracy = train_metrics['overall_accuracy']
-            
-    #         train_losses.append(train_loss)
-    #         val_losses.append(val_loss)
-        
-
-    #     # Save checkpoints
-    #         is_best = current_accuracy > best_accuracy
-    #         if is_best:
-    #             best_accuracy = current_accuracy
-                
-    #         if epoch % 5 == 0 or epoch == self.num_epochs or is_best:
-    #             self.save_checkpoint(epoch, 
-    #                               {'train': train_metrics, 'val': val_metrics if self.val_loader else None},
-    #                               is_best)
-        
-    #     print("\nTraining completed!")
-    #     print(f"Best accuracy achieved: {best_accuracy:.4f}")
-    #     self.writer.close()
-
     def train(self):
-        """Main training loop with warmup phase"""
+        """Main training loop"""
         print(f"\nStarting training for {self.num_epochs} epochs...")
         
-        # Warmup phase - train only regression head for 3 epochs
-        print("Starting 3-epoch warmup phase...")
-        
-        # Store original requires_grad state
-        original_states = {}
-        for name, param in self.model.named_parameters():
-            original_states[name] = param.requires_grad
-            param.requires_grad = False  # Freeze all parameters
-        
-        # Unfreeze only regression head parameters
-        for name, param in self.model.named_parameters():
-            if 'regression_head' in name:
-                param.requires_grad = True
-        
-        # Create warmup optimizer just for regression head
-        warmup_optimizer = optim.AdamW(
-            [p for n, p in self.model.named_parameters() if 'regression_head' in n and p.requires_grad],
-            lr=1e-3
-        )
-        
-        # Simple linear learning rate scheduler for warmup
-        warmup_scheduler = optim.lr_scheduler.LinearLR(
-            warmup_optimizer, 
-            start_factor=0.1, 
-            end_factor=1.0, 
-            total_iters=3 * len(self.train_loader)
-        )
-        
-        # Run warmup training for 3 epochs
-        for epoch in range(1, 4):
-            self.model.train()
-            print(f"\nWarmup Epoch {epoch}/3")
-            
-            for batch_idx, batch in enumerate(self.train_loader):
-                sentinel_data = batch['sentinel'].to(self.device, non_blocking=True)
-                ground_truth = batch['ground_truth'].to(self.device, non_blocking=True)
-                
-                # Add noise
-                noise = torch.randn_like(sentinel_data) * 0.01
-                sentinel_data = sentinel_data + noise
-                
-                warmup_optimizer.zero_grad(set_to_none=True)
-                
-                with torch.cuda.amp.autocast('cuda'):
-                    predictions = self.model(sentinel_data)
-                    loss = self.criterion(predictions, ground_truth)
-                
-                self.scaler.scale(loss).backward()
-                self.scaler.unscale_(warmup_optimizer)
-                self.scaler.step(warmup_optimizer)
-                self.scaler.update()
-                warmup_scheduler.step()
-                
-                if batch_idx % 20 == 0:
-                    print(f"\rWarmup batch {batch_idx}/{len(self.train_loader)}, Loss: {loss.item():.4f}", end="")
-        
-        # Restore original requires_grad states
-        for name, param in self.model.named_parameters():
-            param.requires_grad = original_states[name]
-        
-        print("\nWarmup completed. Starting main training...\n")
-        
-        # Continue with normal training
         train_losses = []
         val_losses = []
         best_loss = float('inf')
@@ -953,6 +823,7 @@ class ViTTrainer:
             train_loss, train_main_loss, train_smooth_loss, train_metrics = self.train_epoch(epoch)
             print(f"Train Loss: {train_loss:.4f} (Main: {train_main_loss:.4f}, Smooth: {train_smooth_loss:.4f})")
             
+
             # Validation
             if self.val_loader is not None:
                 val_loss, val_main_loss, val_smooth_loss, val_metrics = self.validate(epoch)
@@ -965,15 +836,16 @@ class ViTTrainer:
             train_losses.append(train_loss)
             val_losses.append(val_loss)
         
-            # Save checkpoints
+
+        # Save checkpoints
             is_best = current_accuracy > best_accuracy
             if is_best:
                 best_accuracy = current_accuracy
                 
             if epoch % 5 == 0 or epoch == self.num_epochs or is_best:
                 self.save_checkpoint(epoch, 
-                                {'train': train_metrics, 'val': val_metrics if self.val_loader else None},
-                                is_best)
+                                  {'train': train_metrics, 'val': val_metrics if self.val_loader else None},
+                                  is_best)
         
         print("\nTraining completed!")
         print(f"Best accuracy achieved: {best_accuracy:.4f}")
