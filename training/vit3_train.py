@@ -523,7 +523,7 @@ class ViTTrainer:
            # Log gradients periodically
             if batch_idx % 10 == 0:
                 for name, param in self.model.named_parameters():
-                    if param.grad is not None:
+                    if param.grad is not None and torch.any(param.grad):
                         self.writer.add_histogram(f'gradients/{name}', param.grad, global_step)
 
                 # Clear memory
