@@ -234,7 +234,7 @@ class ViTTrainer:
         }
     })
         # Add gradient scaler for mixed precision training
-        self.scaler = torch.cuda.amp.GradScaler("cuda")
+        self.scaler = torch.cuda.amp.GradScaler()
 
         #Loss function
         #self.custom_criterion = criterion
@@ -259,7 +259,7 @@ class ViTTrainer:
 
         self.optimizer = optim.AdamW(para_groups, weight_decay=weight_decay, betas=(0.9, 0.999), eps=1e-8)
         # Enable automatic mixed precision
-        self.scaler = torch.cuda.amp.GradScaler("cuda")
+        self.scaler = torch.cuda.amp.GradScaler()
 
        #learning rate scheduler
         total_steps = len(train_loader) * num_epochs
@@ -465,7 +465,7 @@ class ViTTrainer:
 
             self.optimizer.zero_grad(set_to_none=True)  # More memory efficient than zero_grad()
 
-            with torch.cuda.amp.autocast('cuda'):
+            with torch.cuda.amp.autocast():
                 predictions = self.model(sentinel_data)
                 main_loss = self.criterion(predictions, ground_truth)
                 smooth_loss = self.temporal_smoothness_loss(predictions)
@@ -606,7 +606,7 @@ class ViTTrainer:
                 sentinel_data = batch['sentinel'].to(self.device)
                 ground_truth = batch['ground_truth'].to(self.device)
 
-                with torch.cuda.amp.autocast('cuda'):
+                with torch.cuda.amp.autocast():
                     predictions = self.model(sentinel_data)
                     main_loss = self.criterion(predictions, ground_truth)
                     smooth_loss = self.temporal_smoothness_loss(predictions)
