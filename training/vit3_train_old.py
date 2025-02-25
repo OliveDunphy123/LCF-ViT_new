@@ -12,8 +12,10 @@ from torch.utils.tensorboard import SummaryWriter
 from sklearn.metrics import r2_score
 from torch.cuda.amp import GradScaler, autocast
 
-from vit_model3_yearly_15 import create_model
-from my_dataset import create_training_dataloaders
+PROJECT_ROOT = Path('/mnt/guanabana/raid/hdd1/qinxu/Python/LCF-ViT')
+sys.path.append(str(PROJECT_ROOT))
+from models.vit_model3_yearly_15 import create_model
+from data.my_dataset import create_training_dataloaders
 
 class CombinedLoss(nn.Module):
     def __init__(self):

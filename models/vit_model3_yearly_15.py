@@ -270,8 +270,8 @@ class SentinelViT(nn.Module):
             nn.GELU(),
             nn.Dropout(0.1),
             nn.Linear(256, 7 * 25),  # 7 fractions * (5x5) spatial output
-            Lambda(lambda x: x.reshape(-1, 7, 5, 5)),  # [B, 7, 5, 5]
-            Lambda(lambda x: torch.softmax(x, dim=1))  # Ensures fractions sum to 1 at each pixel
+            #Lambda(lambda x: x.reshape(-1, 7, 5, 5)),  # [B, 7, 5, 5]
+            #Lambda(lambda x: torch.softmax(x, dim=1))  # Ensures fractions sum to 1 at each pixel
             #nn.Softmax(dim=1)
         )
 
@@ -312,6 +312,14 @@ class SentinelViT(nn.Module):
                 
                 if m.bias is not None:
                     nn.init.zeros_(m.bias)
+
+        # Initialize LayerNorm with ones
+        for m in self.modules():
+            if isinstance(m, nn.LayerNorm):
+                nn.init.ones_(m.weight)
+                nn.init.zeros_(m.bias)
+
+        
     
     def _resize_pos_embed(self, pos_embed):
         """Resize position embeddings to match current model size"""
@@ -458,6 +466,7 @@ class SentinelViT(nn.Module):
     
         temporal_outputs = []
         years = year_to_tensor(start_year, B).to(x.device)
+        #print(f"Years tensor: {years}, shape: {years.shape}")
     
         for t in range(T):
             # Current timestep input
