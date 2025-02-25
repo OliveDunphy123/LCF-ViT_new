@@ -922,7 +922,7 @@ class ViTTrainer:
                 
                 warmup_optimizer.zero_grad(set_to_none=True)
                 
-                with torch.cuda.amp.autocast('cuda'):
+                with torch.cuda.amp.autocast():
                     predictions = self.model(sentinel_data)
                     loss = self.criterion(predictions, ground_truth)
                 
