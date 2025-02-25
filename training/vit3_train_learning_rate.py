@@ -130,7 +130,7 @@ class ViTTrainer:
         model,
         train_loader,
         val_loader=None,
-        learning_rate=3e-4,  # Increased from 1e-4
+        learning_rate=1e-3,  # Increased from 1e-4
         weight_decay=5e-3, # Adjusted from 1e-2
         device='cuda',
         num_epochs=50,
@@ -250,10 +250,10 @@ class ViTTrainer:
         # Optimizer with different learning rates for different components
         para_groups=[
                 {'params': model.patch_embed.parameters(), 'lr': learning_rate * 0.5}, #Increased from 0.2
-                {'params': model.blocks.parameters(), 'lr': learning_rate * 1.0}, # Reduced from 1.5
-                {'params': model.year_embedding.parameters(), 'lr': learning_rate * 3},  # Changed from temporal_embed. reduced from 5
-                {'params': model.year_proj.parameters(), 'lr': learning_rate * 3},      # Added year_proj, reduced from 5
-                {'params': model.regression_head.parameters(), 'lr': learning_rate * 6}, # Reduced from 10
+                {'params': model.blocks.parameters(), 'lr': learning_rate * 1.5}, # Reduced from 1.5
+                {'params': model.year_embedding.parameters(), 'lr': learning_rate * 5},  # Changed from temporal_embed. reduced from 5
+                {'params': model.year_proj.parameters(), 'lr': learning_rate * 5},      # Added year_proj, reduced from 5
+                {'params': model.regression_head.parameters(), 'lr': learning_rate * 10}, # Reduced from 10
             ]
 
         self.optimizer = optim.AdamW(para_groups, weight_decay=weight_decay, betas=(0.9, 0.999), eps=1e-8)
@@ -268,8 +268,8 @@ class ViTTrainer:
                 self.optimizer,
                 max_lr=max_lrs,
                 total_steps=total_steps,
-                pct_start=0.3,
-                div_factor=20,
+                pct_start=0.2,
+                div_factor=25,
                 final_div_factor=1e3,
                 anneal_strategy='cos'
             )
@@ -293,7 +293,7 @@ class ViTTrainer:
         # Default loss if no custom criterion provided
         mse = self.mse_loss(pred, target)
         l1 = self.l1_loss(pred, target)
-        return 0.7 * mse + 0.3 * l1
+        return 0.9 * mse + 0.1 * l1 # Increased weight on MSE, reduced on L1
 
     def temporal_smoothness_loss(self, pred):
         """Calculate temporal smoothness loss"""
@@ -427,6 +427,10 @@ class ViTTrainer:
         running_r2_scores = torch.zeros(7, device=self.device)  # Add accumulator for per-class R² scores
 
 
+         # Track warmup status
+        warmup_epochs = 3
+        in_warmup = epoch <= warmup_epochs
+
         n_batches = len(self.train_loader)
         print(f"\nEpoch {epoch}/{self.num_epochs}")
 
@@ -436,7 +440,8 @@ class ViTTrainer:
             ground_truth = batch['ground_truth'].to(self.device, non_blocking=True)
 
             # Data augmentation
-            noise = torch.randn_like(sentinel_data) * 0.01
+            noise_scale = 0.02 if epoch <= 5 else 0.01  # Higher noise early on
+            noise = torch.randn_like(sentinel_data) * noise_scale
             sentinel_data = sentinel_data + noise
 
             self.optimizer.zero_grad(set_to_none=True)  # More memory efficient than zero_grad()
@@ -445,6 +450,7 @@ class ViTTrainer:
                 predictions = self.model(sentinel_data)
                 main_loss = self.criterion(predictions, ground_truth)
                 smooth_loss = self.temporal_smoothness_loss(predictions)
+
                 smooth_weight = min(0.3, 0.05 + epoch * 0.005)
                 loss = main_loss + smooth_weight * smooth_loss
 
@@ -462,11 +468,17 @@ class ViTTrainer:
 
             # Unscale before clip_grad_norm
             self.scaler.unscale_(self.optimizer)
-            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+            # Increase max_norm for gradient clipping in early epochs to allow escaping local minima
+            max_norm = 3.0 if epoch <= 5 else 1.0  # Higher gradient norm early on
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=max_norm)
+            #torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
 
             self.scaler.step(self.optimizer)
             self.scaler.update()
-            self.scheduler.step()
+             # Only step the scheduler if not in warmup phase
+            if not in_warmup:
+                self.scheduler.step()
+            #self.scheduler.step()
 
             # Calculate metrics on CPU to save GPU memory
             with torch.no_grad():
@@ -553,6 +565,7 @@ class ViTTrainer:
         print("R² scores:", ' '.join(f"{r2:.4f}" for r2 in metrics['r2_scores']))
 
         return avg_loss, avg_main_loss, avg_smooth_loss, metrics
+    
     def validate(self, epoch):
         if self.val_loader is None or len(self.val_loader) == 0:
             return None, None, None, None
@@ -812,14 +825,33 @@ class ViTTrainer:
         """Main training loop"""
         print(f"\nStarting training for {self.num_epochs} epochs...")
         
+        # Learning rate warmup phase
+        warmup_epochs = 3
+        print(f"Starting {warmup_epochs}-epoch warmup phase...")
+
         train_losses = []
         val_losses = []
         best_loss = float('inf')
         best_accuracy = 0.0
 
+        # Store original learning rates before warmup
+        original_lrs = [group['lr'] for group in self.optimizer.param_groups]
+
         for epoch in range(1, self.num_epochs + 1):
             print(f"\nEpoch {epoch}/{self.num_epochs}")
-            
+            # Apply warmup scaling for initial epochs
+            if epoch <= warmup_epochs:
+                warmup_factor = epoch / warmup_epochs
+                for i, param_group in enumerate(self.optimizer.param_groups):
+                    param_group['lr'] = original_lrs[i] * warmup_factor
+                print(f"Warmup Epoch {epoch}/{warmup_epochs}")
+            else:
+            # After warmup, let the scheduler handle the learning rate
+            # This line is only needed if you're manually setting LRs during warmup
+            # and NOT using the scheduler during warmup
+                if epoch == warmup_epochs + 1:
+                    for i, param_group in enumerate(self.optimizer.param_groups):
+                        param_group['lr'] = original_lrs[i]
             train_loss, train_main_loss, train_smooth_loss, train_metrics = self.train_epoch(epoch)
             print(f"Train Loss: {train_loss:.4f} (Main: {train_main_loss:.4f}, Smooth: {train_smooth_loss:.4f})")
             
@@ -916,7 +948,7 @@ def main():
 
 
     # Set batch size based on number of GPUs
-    per_gpu_batch_size = 4  # Base batch size per GPU
+    per_gpu_batch_size = 8  # Base batch size per GPU
     num_gpus = torch.cuda.device_count()
     total_batch_size = per_gpu_batch_size * num_gpus
 
