@@ -130,7 +130,7 @@ class ViTTrainer:
         model,
         train_loader,
         val_loader=None,
-        learning_rate=1e-3,  # Increased from 1e-4
+        learning_rate=5e-4,  # Increased from 1e-4, 3e-4, 0.000001
         weight_decay=5e-3, # Adjusted from 1e-2
         device='cuda',
         num_epochs=50,
@@ -249,11 +249,11 @@ class ViTTrainer:
 
         # Optimizer with different learning rates for different components
         para_groups=[
-                {'params': model.patch_embed.parameters(), 'lr': learning_rate * 0.5}, #Increased from 0.2
-                {'params': model.blocks.parameters(), 'lr': learning_rate * 1.5}, # Reduced from 1.5
-                {'params': model.year_embedding.parameters(), 'lr': learning_rate * 5},  # Changed from temporal_embed. reduced from 5
-                {'params': model.year_proj.parameters(), 'lr': learning_rate * 5},      # Added year_proj, reduced from 5
-                {'params': model.regression_head.parameters(), 'lr': learning_rate * 10}, # Reduced from 10
+                {'params': model.patch_embed.parameters(), 'lr': learning_rate * 0.2}, #Increased from 0.2
+                {'params': model.blocks.parameters(), 'lr': learning_rate * 2}, # Reduced from 1.5
+                {'params': model.year_embedding.parameters(), 'lr': learning_rate * 10},  # Changed from temporal_embed. reduced from 5
+                {'params': model.year_proj.parameters(), 'lr': learning_rate * 10},      # Added year_proj, reduced from 5
+                {'params': model.regression_head.parameters(), 'lr': learning_rate * 20}, # Reduced from 10
             ]
 
         self.optimizer = optim.AdamW(para_groups, weight_decay=weight_decay, betas=(0.9, 0.999), eps=1e-8)
@@ -268,8 +268,8 @@ class ViTTrainer:
                 self.optimizer,
                 max_lr=max_lrs,
                 total_steps=total_steps,
-                pct_start=0.2,
-                div_factor=25,
+                pct_start=0.3,
+                div_factor=20,
                 final_div_factor=1e3,
                 anneal_strategy='cos'
             )
@@ -293,7 +293,7 @@ class ViTTrainer:
         # Default loss if no custom criterion provided
         mse = self.mse_loss(pred, target)
         l1 = self.l1_loss(pred, target)
-        return 0.9 * mse + 0.1 * l1 # Increased weight on MSE, reduced on L1
+        return 0.7 * mse + 0.3 * l1 # Increased weight on MSE, reduced on L1
 
     def temporal_smoothness_loss(self, pred):
         """Calculate temporal smoothness loss"""
