@@ -9,6 +9,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 # Get the absolute path to the project root directory
 PROJECT_ROOT = Path('/mnt/guanabana/raid/hdd1/qinxu/Python/LCF-ViT')
+#PROJECT_ROOT = Path('/lustre/scratch/WUR/ESG/xu116/Python/LCF-ViT_new')
 sys.path.append(str(PROJECT_ROOT))
 
 from models.vit_model1_monthly_15 import create_model
@@ -53,41 +54,25 @@ def run_grid_search():
     os.environ["CUDA_VISIBLE_DEVICES"] = "1,2,3"  # Use first 3 GPUs
 
     # Define parameter grid
-    # param_grid = {
-    #     'learning_rate': [1e-4,5e-4],#[1e-4, 5e-4],  # 2 options
-    #     'weight_decay': [1e-3,1e-2],#[1e-3, 1e-2],   # 2 options
-    #     'batch_size': [12,15],#[16, 32],         # 2 options
-    #     'loss_function': [
-    #         {
-    #             'name': 'mse_l1',
-    #             'params': {
-    #                 'mse_weight': 0.7,
-    #                 'l1_weight': 0.3
-    #             }
-    #         },
-    #         {
-    #             'name': 'smooth_l1',
-    #             'params': {
-    #                 'smooth_weight': 0.1,
-    #                 'beta': 1.0
-    #             }
-    #         },
-    #         {
-    #             'name': 'cross_entropy',
-    #             'params': {
-    #                 'num_bins': 20,
-    #                 'smoothing': 0.1
-    #             }
-    #         }
-    #     ],
-    #     'scheduler_type': ['onecycle']  # 1 option
-    # }
-
     param_grid = {
-        'learning_rate': [5e-4],  # 0.0005
-        'weight_decay': [1e-2],   # 0.01
-        'batch_size': [15],
+        'learning_rate': [1e-4,5e-4], #[1e-4, 5e-4],  # 2 options
+        'weight_decay': [1e-4,1e-2],  #[1e-3, 1e-2],   # 2 options
+        'batch_size': [12,15],  #[16, 32],  # 2 options
         'loss_function': [
+            {
+                'name': 'mse_l1',
+                'params': {
+                    'mse_weight': 0.7,
+                    'l1_weight': 0.3
+                }
+            },
+            {
+                'name': 'smooth_l1',
+                'params': {
+                    'smooth_weight': 0.1,
+                    'beta': 1.0
+                }
+            },
             {
                 'name': 'cross_entropy',
                 'params': {
@@ -96,21 +81,25 @@ def run_grid_search():
                 }
             }
         ],
-        'scheduler_type': ['onecycle']
+        'scheduler_type': ['onecycle']  # 1 option
     }
-#     {
-#   "learning_rate": 0.0005,
-#   "weight_decay": 0.01,
-#   "batch_size": 15,
-#   "loss_function": {
-#     "name": "cross_entropy",
-#     "params": {
-#       "num_bins": 20,
-#       "smoothing": 0.1
-#     }
-#   },
-#   "scheduler_type": "onecycle"
-# }
+
+    # param_grid = {
+    #     'learning_rate': [5e-4],  # 0.0005
+    #     'weight_decay': [1e-2],   # 0.01
+    #     'batch_size': [15],
+    #     'loss_function': [
+    #         {
+    #             'name': 'cross_entropy',
+    #             'params': {
+    #                 'num_bins': 20,
+    #                 'smoothing': 0.1
+    #             }
+    #         }
+    #     ],
+    #     'scheduler_type': ['onecycle']
+    # }
+
 
     # Generate all combinations
     param_names = list(param_grid.keys())
@@ -165,13 +154,15 @@ def run_grid_search():
         try:
             # Create data loaders
             train_loader = create_monthly_15_dataloader(
-                base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart",
+                #base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart",
+                base_path="/lustre/scratch/WUR/ESG/xu116",
                 split="Training",
                 batch_size=params['batch_size']
             )
             
             val_loader = create_monthly_15_dataloader(
-                base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart",
+                #base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart",
+                base_path="/lustre/scratch/WUR/ESG/xu116",
                 split="Val_set",
                 batch_size=params['batch_size']
             )
