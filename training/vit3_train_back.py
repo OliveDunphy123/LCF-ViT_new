@@ -15,104 +15,104 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from models.vit_model3_yearly_15 import create_model
 from data.my_whole_dataset import create_yearly_15_dataloader
 
-def calculate_accuracy_metrics(predictions, ground_truth):
-        """
-        Calculate accuracy metrics for land cover fraction predictions
-        
-        Args:
-            predictions: tensor of shape [B, 7, T, 5, 5] 
-            ground_truth: tensor of shape [B, 7, T, 5, 5]
-            
-        Returns:
-            Dictionary containing various accuracy metrics
-        """
-        
-        # Mean Absolute Error for each class
-        mae_per_class = torch.mean(torch.abs(predictions - ground_truth), dim=(0,2,3,4))
-        
-        # Root Mean Square Error for each class
-        rmse_per_class = torch.sqrt(torch.mean((predictions - ground_truth)**2, dim=(0,2,3,4)))
-        
-        # Overall accuracy (considering predictions within 10% of ground truth as correct)
-        tolerance = 0.05
-        correct_predictions = torch.abs(predictions - ground_truth) <= tolerance
-        overall_accuracy = torch.mean(correct_predictions.float())
-        
-        # R² score for each class
-        r2_scores = []
-        for class_idx in range(7):
-            y_true = ground_truth[:,class_idx].flatten()
-            y_pred = predictions[:,class_idx].flatten()
-            
-            ss_tot = torch.sum((y_true - torch.mean(y_true))**2)
-            ss_res = torch.sum((y_true - y_pred)**2)
-            
-            r2 = 1 - (ss_res / (ss_tot + 1e-8))
-            r2_scores.append(r2.item())
-        
-        return {
-            'mae_per_class': mae_per_class,
-            'rmse_per_class': rmse_per_class,
-            'overall_accuracy': overall_accuracy,
-            'r2_scores': r2_scores
-        }
-
 # def calculate_accuracy_metrics(predictions, ground_truth):
-#     """
-#     Calculate accuracy metrics for land cover fraction predictions
-    
-#     Args:
-#         predictions: tensor of shape [B, 7, T, 5, 5] 
-#         ground_truth: tensor of shape [B, 7, T, 5, 5]
+#         """
+#         Calculate accuracy metrics for land cover fraction predictions
         
-#     Returns:
-#         Dictionary containing various accuracy metrics
-#     """
-#     # Flatten predictions and ground truth for overall metrics
-#     pred_flat = predictions.flatten()
-#     truth_flat = ground_truth.flatten()
-    
-#     # Overall R²
-#     ss_tot = torch.sum((truth_flat - torch.mean(truth_flat))**2)
-#     ss_res = torch.sum((truth_flat - pred_flat)**2)
-#     overall_r2 = 1 - (ss_res / (ss_tot + 1e-8))
-    
-#     # Overall MAE and RMSE
-#     overall_mae = torch.mean(torch.abs(pred_flat - truth_flat))
-#     overall_rmse = torch.sqrt(torch.mean((pred_flat - truth_flat)**2))
-    
-#     # Mean Absolute Error for each class
-#     mae_per_class = torch.mean(torch.abs(predictions - ground_truth), dim=(0,2,3,4))
-    
-#     # Root Mean Square Error for each class
-#     rmse_per_class = torch.sqrt(torch.mean((predictions - ground_truth)**2, dim=(0,2,3,4)))
-    
-#     # Overall accuracy (considering predictions within 10% of ground truth as correct)
-#     tolerance = 0.05
-#     correct_predictions = torch.abs(predictions - ground_truth) <= tolerance
-#     overall_accuracy = torch.mean(correct_predictions.float())
-    
-#     # R² score for each class
-#     r2_scores = []
-#     for class_idx in range(7):
-#         y_true = ground_truth[:,class_idx].flatten()
-#         y_pred = predictions[:,class_idx].flatten()
+#         Args:
+#             predictions: tensor of shape [B, 7, T, 5, 5] 
+#             ground_truth: tensor of shape [B, 7, T, 5, 5]
+            
+#         Returns:
+#             Dictionary containing various accuracy metrics
+#         """
         
-#         ss_tot = torch.sum((y_true - torch.mean(y_true))**2)
-#         ss_res = torch.sum((y_true - y_pred)**2)
+#         # Mean Absolute Error for each class
+#         mae_per_class = torch.mean(torch.abs(predictions - ground_truth), dim=(0,2,3,4))
         
-#         r2 = 1 - (ss_res / (ss_tot + 1e-8))
-#         r2_scores.append(r2.item())
+#         # Root Mean Square Error for each class
+#         rmse_per_class = torch.sqrt(torch.mean((predictions - ground_truth)**2, dim=(0,2,3,4)))
+        
+#         # Overall accuracy (considering predictions within 10% of ground truth as correct)
+#         tolerance = 0.05
+#         correct_predictions = torch.abs(predictions - ground_truth) <= tolerance
+#         overall_accuracy = torch.mean(correct_predictions.float())
+        
+#         # R² score for each class
+#         r2_scores = []
+#         for class_idx in range(7):
+#             y_true = ground_truth[:,class_idx].flatten()
+#             y_pred = predictions[:,class_idx].flatten()
+            
+#             ss_tot = torch.sum((y_true - torch.mean(y_true))**2)
+#             ss_res = torch.sum((y_true - y_pred)**2)
+            
+#             r2 = 1 - (ss_res / (ss_tot + 1e-8))
+#             r2_scores.append(r2.item())
+        
+#         return {
+#             'mae_per_class': mae_per_class,
+#             'rmse_per_class': rmse_per_class,
+#             'overall_accuracy': overall_accuracy,
+#             'r2_scores': r2_scores
+#         }
+
+def calculate_accuracy_metrics(predictions, ground_truth):
+    """
+    Calculate accuracy metrics for land cover fraction predictions
     
-#     return {
-#         'overall_accuracy': overall_accuracy.item(),
-#         'overall_r2': overall_r2.item(),
-#         'overall_mae': overall_mae.item(),
-#         'overall_rmse': overall_rmse.item(),
-#         'mae_per_class': mae_per_class,
-#         'rmse_per_class': rmse_per_class,
-#         'r2_scores': r2_scores
-#     }
+    Args:
+        predictions: tensor of shape [B, 7, T, 5, 5] 
+        ground_truth: tensor of shape [B, 7, T, 5, 5]
+        
+    Returns:
+        Dictionary containing various accuracy metrics
+    """
+    # Flatten predictions and ground truth for overall metrics
+    pred_flat = predictions.flatten()
+    truth_flat = ground_truth.flatten()
+    
+    # Overall R²
+    ss_tot = torch.sum((truth_flat - torch.mean(truth_flat))**2)
+    ss_res = torch.sum((truth_flat - pred_flat)**2)
+    overall_r2 = 1 - (ss_res / (ss_tot + 1e-8))
+    
+    # Overall MAE and RMSE
+    overall_mae = torch.mean(torch.abs(pred_flat - truth_flat))
+    overall_rmse = torch.sqrt(torch.mean((pred_flat - truth_flat)**2))
+    
+    # Mean Absolute Error for each class
+    mae_per_class = torch.mean(torch.abs(predictions - ground_truth), dim=(0,2,3,4))
+    
+    # Root Mean Square Error for each class
+    rmse_per_class = torch.sqrt(torch.mean((predictions - ground_truth)**2, dim=(0,2,3,4)))
+    
+    # Overall accuracy (considering predictions within 10% of ground truth as correct)
+    tolerance = 0.05
+    correct_predictions = torch.abs(predictions - ground_truth) <= tolerance
+    overall_accuracy = torch.mean(correct_predictions.float())
+    
+    # R² score for each class
+    r2_scores = []
+    for class_idx in range(7):
+        y_true = ground_truth[:,class_idx].flatten()
+        y_pred = predictions[:,class_idx].flatten()
+        
+        ss_tot = torch.sum((y_true - torch.mean(y_true))**2)
+        ss_res = torch.sum((y_true - y_pred)**2)
+        
+        r2 = 1 - (ss_res / (ss_tot + 1e-8))
+        r2_scores.append(r2.item())
+    
+    return {
+        'overall_accuracy': overall_accuracy.item(),
+        'overall_r2': overall_r2.item(),
+        'overall_mae': overall_mae.item(),
+        'overall_rmse': overall_rmse.item(),
+        'mae_per_class': mae_per_class,
+        'rmse_per_class': rmse_per_class,
+        'r2_scores': r2_scores
+    }
 
 class ViTTrainer:
     def __init__(
@@ -260,7 +260,8 @@ class ViTTrainer:
             # Calculate losses
             main_loss = self.criterion(predictions, ground_truth)
             smooth_loss = self.temporal_smoothness_loss(predictions)
-            smooth_weight = min(0.5, 0.1+epoch * 0.01)
+            smooth_weight = min(0.3, 0.05 + epoch * 0.005)
+            #smooth_weight = min(0.5, 0.1+epoch * 0.01) # before 
             loss = main_loss + smooth_weight * smooth_loss
             
             loss.backward()
@@ -306,9 +307,9 @@ class ViTTrainer:
         
         # Log epoch metrics
         self.writer.add_scalar('Train/overall_accuracy', metrics['overall_accuracy'], epoch)
-        # self.writer.add_scalar('Train/overall_r2', metrics['overall_r2'], epoch)
-        # self.writer.add_scalar('Train/overall_mae', metrics['overall_mae'], epoch)
-        # self.writer.add_scalar('Train/overall_rmse', metrics['overall_rmse'], epoch)
+        self.writer.add_scalar('Train/overall_r2', metrics['overall_r2'], epoch)
+        self.writer.add_scalar('Train/overall_mae', metrics['overall_mae'], epoch)
+        self.writer.add_scalar('Train/overall_rmse', metrics['overall_rmse'], epoch)
 
         for i, mae in enumerate(metrics['mae_per_class']):
             self.writer.add_scalar(f'Train/mae_class_{i}', mae, epoch)
@@ -325,18 +326,18 @@ class ViTTrainer:
         self.writer.add_scalar('Loss/train_main', avg_main_loss, epoch)
         self.writer.add_scalar('Loss/train_smooth', avg_smooth_loss, epoch)
 
-        print(f"\nEpoch {epoch} Training Metrics:")
-        print(f"Overall Accuracy: {metrics['overall_accuracy']:.4f}")
-        print("MAE per class:", ' '.join(f"{mae:.4f}" for mae in metrics['mae_per_class']))
-        print("R² scores:", ' '.join(f"{r2:.4f}" for r2 in metrics['r2_scores']))
         # print(f"\nEpoch {epoch} Training Metrics:")
         # print(f"Overall Accuracy: {metrics['overall_accuracy']:.4f}")
-        # print(f"Overall R²: {metrics['overall_r2']:.4f}")
-        # print(f"Overall MAE: {metrics['overall_mae']:.4f}")
-        # print(f"Overall RMSE: {metrics['overall_rmse']:.4f}")
         # print("MAE per class:", ' '.join(f"{mae:.4f}" for mae in metrics['mae_per_class']))
-        # print("RMSE per class:", ' '.join(f"{rmse:.4f}" for rmse in metrics['rmse_per_class']))
         # print("R² scores:", ' '.join(f"{r2:.4f}" for r2 in metrics['r2_scores']))
+        print(f"\nEpoch {epoch} Training Metrics:")
+        print(f"Overall Accuracy: {metrics['overall_accuracy']:.4f}")
+        print(f"Overall R²: {metrics['overall_r2']:.4f}")
+        print(f"Overall MAE: {metrics['overall_mae']:.4f}")
+        print(f"Overall RMSE: {metrics['overall_rmse']:.4f}")
+        print("MAE per class:", ' '.join(f"{mae:.4f}" for mae in metrics['mae_per_class']))
+        print("RMSE per class:", ' '.join(f"{rmse:.4f}" for rmse in metrics['rmse_per_class']))
+        print("R² scores:", ' '.join(f"{r2:.4f}" for r2 in metrics['r2_scores']))
 
         return avg_loss, avg_main_loss, avg_smooth_loss, metrics
 
@@ -397,9 +398,9 @@ class ViTTrainer:
         self.writer.add_scalar('Loss/val_smooth', avg_smooth_loss, epoch)
         
         self.writer.add_scalar('Val/overall_accuracy', metrics['overall_accuracy'], epoch)
-        # self.writer.add_scalar('Val/overall_r2', metrics['overall_r2'], epoch)
-        # self.writer.add_scalar('Val/overall_mae', metrics['overall_mae'], epoch)
-        # self.writer.add_scalar('Val/overall_rmse', metrics['overall_rmse'], epoch)
+        self.writer.add_scalar('Val/overall_r2', metrics['overall_r2'], epoch)
+        self.writer.add_scalar('Val/overall_mae', metrics['overall_mae'], epoch)
+        self.writer.add_scalar('Val/overall_rmse', metrics['overall_rmse'], epoch)
 
         for i, mae in enumerate(metrics['mae_per_class']):
             self.writer.add_scalar(f'Val/mae_class_{i}', mae, epoch)
@@ -407,21 +408,21 @@ class ViTTrainer:
             self.writer.add_scalar(f'Val/r2_class_{i}', r2, epoch)
 
 
-        print(f"\nEpoch {epoch} Validation Metrics:")
-        print(f"Loss: {avg_loss:.4f} (Main: {avg_main_loss:.4f}, Smooth: {avg_smooth_loss:.4f})")
-        print(f"Overall Accuracy: {metrics['overall_accuracy']:.4f}")
-        print("MAE per class:", ' '.join(f"{mae:.4f}" for mae in metrics['mae_per_class']))
-        print("R² scores:", ' '.join(f"{r2:.4f}" for r2 in metrics['r2_scores']))
-        
         # print(f"\nEpoch {epoch} Validation Metrics:")
         # print(f"Loss: {avg_loss:.4f} (Main: {avg_main_loss:.4f}, Smooth: {avg_smooth_loss:.4f})")
         # print(f"Overall Accuracy: {metrics['overall_accuracy']:.4f}")
-        # print(f"Overall R²: {metrics['overall_r2']:.4f}")
-        # print(f"Overall MAE: {metrics['overall_mae']:.4f}")
-        # print(f"Overall RMSE: {metrics['overall_rmse']:.4f}")
         # print("MAE per class:", ' '.join(f"{mae:.4f}" for mae in metrics['mae_per_class']))
-        # print("RMSE per class:", ' '.join(f"{rmse:.4f}" for rmse in metrics['rmse_per_class']))
         # print("R² scores:", ' '.join(f"{r2:.4f}" for r2 in metrics['r2_scores']))
+        
+        print(f"\nEpoch {epoch} Validation Metrics:")
+        print(f"Loss: {avg_loss:.4f} (Main: {avg_main_loss:.4f}, Smooth: {avg_smooth_loss:.4f})")
+        print(f"Overall Accuracy: {metrics['overall_accuracy']:.4f}")
+        print(f"Overall R²: {metrics['overall_r2']:.4f}")
+        print(f"Overall MAE: {metrics['overall_mae']:.4f}")
+        print(f"Overall RMSE: {metrics['overall_rmse']:.4f}")
+        print("MAE per class:", ' '.join(f"{mae:.4f}" for mae in metrics['mae_per_class']))
+        print("RMSE per class:", ' '.join(f"{rmse:.4f}" for rmse in metrics['rmse_per_class']))
+        print("R² scores:", ' '.join(f"{r2:.4f}" for r2 in metrics['r2_scores']))
 
         return avg_loss, avg_main_loss, avg_smooth_loss, metrics
     
