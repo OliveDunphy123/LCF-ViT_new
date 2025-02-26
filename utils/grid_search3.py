@@ -56,8 +56,8 @@ def run_grid_search():
     # Define parameter grid
     param_grid = {
         'learning_rate': [1e-4,5e-4],#[1e-4, 5e-4],  # 2 options
-        'weight_decay': [1e-3,1e-2],#[1e-3, 1e-2],   # 2 options
-        'batch_size': [12,15],#[16, 32],         # 2 options
+        'weight_decay': [1e-4,1e-2],#[1e-3, 1e-2],   # 2 options
+        'batch_size': [24,32],#[16, 32],         # 2 options
         'loss_function': [
             {
                 'name': 'mse_l1',
