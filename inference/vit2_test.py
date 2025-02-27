@@ -9,8 +9,8 @@ from pathlib import Path
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from models.vit_model1_monthly_15 import create_model
-from data.my_whole_dataset import create_monthly_15_dataloader
+from models.vit_model2_monthly_5 import create_model
+from data.my_whole_dataset import create_monthly_5_dataloader
 
 def is_northern_hemisphere(location_id, coords_df):
     """
@@ -621,8 +621,8 @@ def main():
     model = create_model()
     
     # Load checkpoint
-    checkpoint_path = "/mnt/guanabana/raid/hdd1/qinxu/Python/LCF-ViT/training/monthly_15_checkpoint_epoch_23.pth"
-    checkpoint_path = "/lustre/scratch/WUR/ESG/xu116/LCF-ViT_new/training/vit_monthly_15_results_20250227_063916/checkpoint_epoch_23.pth"
+    #checkpoint_path = "/mnt/guanabana/raid/hdd1/qinxu/Python/LCF-ViT/training/monthly_5_checkpoint_epoch_26.pth"
+    checkpoint_path = "/lustre/scratch/WUR/ESG/xu116/LCF-ViT_new/training/vit_monthly_5_results_20250227_124046/checkpoint_epoch_26.pth"
     checkpoint = torch.load(checkpoint_path, map_location=device)
     
     # Load state dict
@@ -639,7 +639,7 @@ def main():
     model = model.to(device)
     
     # Create test dataloader
-    test_loader = create_monthly_15_dataloader(
+    test_loader = create_monthly_5_dataloader(
         base_path="/lustre/scratch/WUR/ESG/xu116",
         #base_path = "/mnt/guanabana/raid/shared/dropbox/QinLennart",
         split="Test_set",
@@ -655,7 +655,7 @@ def main():
     
     # Save detailed results as JSON
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    results_path = Path(f"vit_monthly_15_testing_results_{timestamp}.json")
+    results_path = Path(f"vit_monthly_5_testing_results_{timestamp}.json")
     
     with open(results_path, 'w') as f:
         json.dump(results, f, indent=2)

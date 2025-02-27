@@ -1,392 +1,570 @@
-# def calculate_accuracy_metrics(predictions, ground_truth):
-#     """
-#     Calculate comprehensive accuracy metrics for land cover fraction predictions
-    
-#     Args:
-#         predictions: tensor of shape [B, 7, T, 5, 5] where T=4 (years)
-#         ground_truth: tensor of shape [B, 7, T, 5, 5]
-        
-#     Returns:
-#         Dictionary containing various accuracy metrics including bin-specific metrics
-#     """
-#     # Overall metrics (across all classes and timestamps)
-#     pred_flat = predictions.flatten()
-#     truth_flat = ground_truth.flatten()
-    
-#     # Overall R2
-#     ss_tot = torch.sum((truth_flat - torch.mean(truth_flat))**2)
-#     ss_res = torch.sum((truth_flat - pred_flat)**2)
-#     overall_r2 = 1 - (ss_res / (ss_tot + 1e-8))
-    
-#     # Overall MAE, RMSE, Mean Error
-#     overall_mae = torch.mean(torch.abs(pred_flat - truth_flat))
-#     overall_rmse = torch.sqrt(torch.mean((pred_flat - truth_flat)**2))
-#     overall_mean_error = torch.mean(pred_flat - truth_flat)
-    
-#     # Bins metrics
-#     bins = torch.tensor([0.0, 0.25, 0.5, 0.75, 1.0], device=predictions.device)
-#     bins_metrics = []
-    
-#     for i in range(len(bins)):
-#         if i == 0:
-#             # For bin 0
-#             bin_mask = (ground_truth == bins[i]).flatten()
-#             bin_correct = (predictions.flatten()[bin_mask] >= 0.0) & (predictions.flatten()[bin_mask] <= 0.25)
-#         elif i == len(bins) - 1:
-#             # For bin 1.0
-#             bin_mask = (ground_truth == bins[i]).flatten()
-#             bin_correct = (predictions.flatten()[bin_mask] > 0.75) & (predictions.flatten()[bin_mask] <= 1.0)
-#         else:
-#             # For intermediate bins (0.25, 0.5, 0.75)
-#             bin_mask = (ground_truth == bins[i]).flatten()
-#             bin_correct = (predictions.flatten()[bin_mask] > bins[i-1]) & (predictions.flatten()[bin_mask] <= bins[i])
-        
-#         if torch.sum(bin_mask) > 0:  # Only calculate if we have samples in this bin
-#             bin_pred = predictions.flatten()[bin_mask]
-#             bin_truth = ground_truth.flatten()[bin_mask]
-            
-#             # Calculate bin-specific metrics
-#             bin_accuracy = torch.mean(bin_correct.float())
-#             bin_mae = torch.mean(torch.abs(bin_pred - bin_truth))
-#             bin_rmse = torch.sqrt(torch.mean((bin_pred - bin_truth)**2))
-#             bin_mean_error = torch.mean(bin_pred - bin_truth)
-            
-#             # Calculate bin-specific R2
-#             bin_ss_tot = torch.sum((bin_truth - torch.mean(bin_truth))**2)
-#             bin_ss_res = torch.sum((bin_truth - bin_pred)**2)
-#             bin_r2 = 1 - (bin_ss_res / (bin_ss_tot + 1e-8))
-            
-#             bins_metrics.append({
-#                 'bin_value': bins[i].item(),
-#                 'accuracy': bin_accuracy.item(),
-#                 'r2': bin_r2.item(),
-#                 'mae': bin_mae.item(),
-#                 'rmse': bin_rmse.item(),
-#                 'mean_error': bin_mean_error.item(),
-#                 'sample_count': torch.sum(bin_mask).item()
-#             })
-#         else:
-#             bins_metrics.append({
-#                 'bin_value': bins[i].item(),
-#                 'accuracy': 0.0,
-#                 'r2': 0.0,
-#                 'mae': 0.0,
-#                 'rmse': 0.0,
-#                 'mean_error': 0.0,
-#                 'sample_count': 0
-#             })
-    
-#     # Overall bins accuracy (weighted by sample count)
-#     total_samples = sum(metric['sample_count'] for metric in bins_metrics)
-#     weighted_accuracy = sum(metric['accuracy'] * metric['sample_count'] 
-#                           for metric in bins_metrics) / (total_samples + 1e-8)
-    
-#     # Per-class metrics
-#     num_classes = predictions.shape[1]
-#     class_metrics = []
-    
-#     for c in range(num_classes):
-#         class_pred = predictions[:, c].flatten()
-#         class_truth = ground_truth[:, c].flatten()
-        
-#         # Calculate class R2
-#         class_ss_tot = torch.sum((class_truth - torch.mean(class_truth))**2)
-#         class_ss_res = torch.sum((class_truth - class_pred)**2)
-#         class_r2 = 1 - (class_ss_res / (class_ss_tot + 1e-8))
-        
-#         # Calculate other class metrics
-#         class_mae = torch.mean(torch.abs(class_pred - class_truth))
-#         class_rmse = torch.sqrt(torch.mean((class_pred - class_truth)**2))
-#         class_mean_error = torch.mean(class_pred - class_truth)
-        
-#         class_metrics.append({
-#             'r2': class_r2.item(),
-#             'mae': class_mae.item(),
-#             'rmse': class_rmse.item(),
-#             'mean_error': class_mean_error.item()
-#         })
-    
-#     # Change detection metrics
-#     truth_changes = ground_truth[:, :, 1:] - ground_truth[:, :, :-1]
-#     pred_changes = predictions[:, :, 1:] - predictions[:, :, :-1]
-    
-#     # Overall change detection metrics
-#     change_pred_flat = pred_changes.flatten()
-#     change_truth_flat = truth_changes.flatten()
-    
-#     change_ss_tot = torch.sum((change_truth_flat - torch.mean(change_truth_flat))**2)
-#     change_ss_res = torch.sum((change_truth_flat - change_pred_flat)**2)
-#     change_r2 = 1 - (change_ss_res / (change_ss_tot + 1e-8))
-    
-#     change_mae = torch.mean(torch.abs(change_pred_flat - change_truth_flat))
-#     change_rmse = torch.sqrt(torch.mean((change_pred_flat - change_truth_flat)**2))
-#     change_mean_error = torch.mean(change_pred_flat - change_truth_flat)
-    
-#     # Per-class change detection metrics
-#     class_change_metrics = []
-    
-#     for c in range(num_classes):
-#         class_change_pred = pred_changes[:, c].flatten()
-#         class_change_truth = truth_changes[:, c].flatten()
-        
-#         # Calculate class change R2
-#         class_change_ss_tot = torch.sum((class_change_truth - torch.mean(class_change_truth))**2)
-#         class_change_ss_res = torch.sum((class_change_truth - class_change_pred)**2)
-#         class_change_r2 = 1 - (class_change_ss_res / (class_change_ss_tot + 1e-8))
-        
-#         # Calculate other class change metrics
-#         class_change_mae = torch.mean(torch.abs(class_change_pred - class_change_truth))
-#         class_change_rmse = torch.sqrt(torch.mean((class_change_pred - class_change_truth)**2))
-#         class_change_mean_error = torch.mean(class_change_pred - class_change_truth)
-        
-#         class_change_metrics.append({
-#             'r2': class_change_r2.item(),
-#             'mae': class_change_mae.item(),
-#             'rmse': class_change_rmse.item(),
-#             'mean_error': class_change_mean_error.item()
-#         })
-    
-#     return {
-#         # Overall metrics
-#         'overall_r2': overall_r2.item(),
-#         'overall_mae': overall_mae.item(),
-#         'overall_rmse': overall_rmse.item(),
-#         'overall_mean_error': overall_mean_error.item(),
-        
-#         # Bins metrics
-#         'bins_metrics': bins_metrics,
-#         'weighted_bins_accuracy': weighted_accuracy,
-        
-#         # Per-class metrics
-#         'class_metrics': class_metrics,
-        
-#         # Change detection metrics
-#         'change_r2': change_r2.item(),
-#         'change_mae': change_mae.item(),
-#         'change_rmse': change_rmse.item(),
-#         'change_mean_error': change_mean_error.item(),
-        
-#         # Per-class change detection metrics
-#         'class_change_metrics': class_change_metrics
-#     }
-
 import torch
-import torch.nn as nn
-from torch.utils.data import DataLoader
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from pathlib import Path
 from tqdm import tqdm
+import numpy as np
 import json
-from datetime import datetime
 import pandas as pd
+from datetime import datetime
+from pathlib import Path
 
-from models.vit_model3_yearly_15 import create_model
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from models.vit_model3_yearly_15 import create_model  
 from data.my_whole_dataset import create_yearly_15_dataloader
 
-def plot_confusion_matrix(bins_metrics, save_path):
-    """Plot confusion matrix for binned predictions"""
-    plt.figure(figsize=(10, 8))
-    data = {
-        'Bin': [f"{m['bin_value']:.2f}" for m in bins_metrics],
-        'Accuracy': [m['accuracy'] for m in bins_metrics],
-        'Sample Count': [m['sample_count'] for m in bins_metrics]
-    }
-    df = pd.DataFrame(data)
-    
-    # Create heatmap
-    sns.heatmap(
-        df[['Accuracy']].values.reshape(-1, 1),
-        annot=True,
-        fmt='.3f',
-        yticklabels=df['Bin'],
-        xticklabels=['Accuracy'],
-        cmap='YlOrRd'
-    )
-    plt.title('Prediction Accuracy by Bin')
-    plt.tight_layout()
-    plt.savefig(save_path)
-    plt.close()
-
-def plot_class_metrics(class_metrics, save_path):
-    """Plot performance metrics for each class"""
-    metrics = ['r2', 'mae', 'rmse', 'mean_error']
-    num_classes = len(class_metrics)
-    
-    fig, axes = plt.subplots(2, 2, figsize=(15, 12))
-    axes = axes.flatten()
-    
-    for idx, metric in enumerate(metrics):
-        values = [m[metric] for m in class_metrics]
-        axes[idx].bar(range(num_classes), values)
-        axes[idx].set_title(f'{metric.upper()} by Class')
-        axes[idx].set_xlabel('Class')
-        axes[idx].set_ylabel(metric.upper())
-        
-    plt.tight_layout()
-    plt.savefig(save_path)
-    plt.close()
-
-def plot_temporal_changes(class_change_metrics, save_path):
-    """Plot temporal change detection metrics"""
-    metrics = ['r2', 'mae', 'rmse', 'mean_error']
-    num_classes = len(class_change_metrics)
-    
-    fig, axes = plt.subplots(2, 2, figsize=(15, 12))
-    axes = axes.flatten()
-    
-    for idx, metric in enumerate(metrics):
-        values = [m[metric] for m in class_change_metrics]
-        axes[idx].bar(range(num_classes), values)
-        axes[idx].set_title(f'Change Detection {metric.upper()} by Class')
-        axes[idx].set_xlabel('Class')
-        axes[idx].set_ylabel(metric.upper())
-        
-    plt.tight_layout()
-    plt.savefig(save_path)
-    plt.close()
-
-def test_model(model_path, test_loader, device='cuda'):
+def is_northern_hemisphere(location_id, coords_df):
     """
-    Comprehensive model testing function
+    Determine if location is in Northern hemisphere based on latitude
     
     Args:
-        model_path: Path to the saved model checkpoint
-        test_loader: DataLoader for test data
-        device: Device to run the model on
+        location_id: ID of the location
+        coords_df: DataFrame with location coordinates
+    
+    Returns:
+        Boolean indicating if location is in Northern hemisphere
     """
-    # Create results directory
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    results_dir = Path(f"test_results_{timestamp}")
-    results_dir.mkdir(exist_ok=True)
+    try:
+        row = coords_df[coords_df['location_id'] == location_id]
+        if len(row) > 0:
+            latitude = row['subpix_mean_y'].values[0]
+            return latitude >= 0
+        return True  # Default to Northern if not found
+    except:
+        return True  # Default to Northern if error
+
+def identify_changing_locations(ground_truth, threshold=0):
+    """
+    Identify locations that have any significant change in ground truth
     
-    # Load model
-    model = create_model()
-    checkpoint = torch.load(model_path, map_location=device)
-    model.load_state_dict(checkpoint['model_state_dict'])
-    model = model.to(device)
-    model.eval()
+    Args:
+        ground_truth: tensor of shape [B, 7, 4, 5, 5] for yearly data
+        threshold: minimum change to consider significant
     
-    # Initialize metrics storage
-    all_predictions = []
-    all_ground_truth = []
-    metrics_per_batch = []
+    Returns:
+        torch.BoolTensor of shape [B] with True for locations with changes
+    """
+    # Calculate maximum absolute difference across all 4 timesteps (years)
+    B = ground_truth.shape[0]
+    max_changes = torch.zeros(B, device=ground_truth.device)
     
-    # Test loop
-    print("\nRunning test evaluation...")
-    with torch.no_grad():
-        for batch in tqdm(test_loader):
-            # Get data
-            sentinel_data = batch['sentinel'].to(device)
-            ground_truth = batch['ground_truth'].to(device)
+    # For each location, look at differences between all possible pairs of years
+    for i in range(ground_truth.shape[2]):
+        for j in range(i+1, ground_truth.shape[2]):
+            # Calculate absolute differences for this year pair
+            diff = torch.abs(ground_truth[:, :, i] - ground_truth[:, :, j])
             
-            # Forward pass
-            predictions = model(sentinel_data)
+            # Update maximum difference found for each location
+            batch_max_diff = torch.max(diff.reshape(B, -1), dim=1)[0]
+            max_changes = torch.maximum(max_changes, batch_max_diff)
+    
+    # Identify locations with changes above threshold
+    changing_locations = max_changes > threshold
+    
+    return changing_locations
+
+def calculate_metrics(predictions, ground_truth):
+    """
+    Calculate regular metrics (R², RMSE, MAE, ME)
+    
+    Args:
+        predictions: tensor of any shape
+        ground_truth: tensor of the same shape as predictions
+    
+    Returns:
+        Dictionary with metrics
+    """
+    # Flatten tensors
+    pred_flat = predictions.reshape(-1)
+    truth_flat = ground_truth.reshape(-1)
+    
+    # Calculate R²
+    ss_tot = torch.sum((truth_flat - torch.mean(truth_flat))**2)
+    ss_res = torch.sum((truth_flat - pred_flat)**2)
+    
+    if ss_tot == 0:
+        r2 = torch.tensor(0.0)
+    else:
+        r2 = 1 - (ss_res / ss_tot)
+    
+    # Calculate other metrics
+    mae = torch.mean(torch.abs(pred_flat - truth_flat))
+    rmse = torch.sqrt(torch.mean((pred_flat - truth_flat)**2))
+    me = torch.mean(pred_flat - truth_flat)
+    
+    return {
+        'r2': r2.item(),
+        'rmse': rmse.item(),
+        'mae': mae.item(),
+        'me': me.item()
+    }
+
+def calculate_change_metrics(predictions, ground_truth):
+    """
+    Calculate metrics for temporal changes between consecutive years
+    
+    Args:
+        predictions: tensor of shape [B, C, T, H, W] or [B, T, H, W] where T=4 for yearly data
+        ground_truth: tensor of same shape as predictions
+    
+    Returns:
+        Dictionary with change metrics
+    """
+    # For yearly data, we can directly compute year-to-year changes
+    # No need for reference months as we're working with annual data
+    
+    # Calculate year-to-year changes
+    pred_changes = predictions[..., 1:, :, :] - predictions[..., :-1, :, :]
+    truth_changes = ground_truth[..., 1:, :, :] - ground_truth[..., :-1, :, :]
+    
+    # Calculate metrics on changes
+    metrics = calculate_metrics(pred_changes, truth_changes)
+    
+    return metrics
+
+def calculate_bin_metrics(predictions, ground_truth, bins=[0.0, 0.25, 0.5, 0.75, 1.0]):
+    """
+    Calculate metrics for each bin value
+    
+    Args:
+        predictions: tensor of any shape
+        ground_truth: tensor of the same shape as predictions
+        bins: list of bin values
+    
+    Returns:
+        List of dictionaries with bin metrics
+    """
+    # Flatten tensors
+    pred_flat = predictions.reshape(-1)
+    truth_flat = ground_truth.reshape(-1)
+    
+    bin_metrics = []
+    
+    for bin_val in bins:
+        # Find pixels with this bin value in ground truth
+        bin_mask = (torch.abs(truth_flat - bin_val) < 1e-6)
+        
+        if torch.sum(bin_mask) > 0:
+            # Extract predictions and ground truth for this bin
+            bin_pred = pred_flat[bin_mask]
+            bin_truth = truth_flat[bin_mask]
             
             # Calculate metrics
-            batch_metrics = calculate_accuracy_metrics(predictions, ground_truth)
-            metrics_per_batch.append(batch_metrics)
+            metrics = calculate_metrics(bin_pred, bin_truth)
             
-            # Store predictions and ground truth for later analysis
+            bin_metrics.append({
+                'bin': bin_val,
+                **metrics,
+                'count': torch.sum(bin_mask).item()
+            })
+        else:
+            # No data for this bin
+            bin_metrics.append({
+                'bin': bin_val,
+                'r2': 0.0,
+                'rmse': 0.0,
+                'mae': 0.0,
+                'me': 0.0,
+                'count': 0
+            })
+    
+    return bin_metrics
+
+def calculate_bin_change_metrics(predictions, ground_truth, bins=[0.0, 0.25, 0.5, 0.75, 1.0]):
+    """
+    Calculate change metrics for each bin value, where bins represent the magnitude of change
+    
+    Args:
+        predictions: tensor of shape [B, C, T, H, W] or [B, T, H, W] where T=4 for yearly data
+        ground_truth: tensor of same shape as predictions
+        bins: list of bin values
+    
+    Returns:
+        List of dictionaries with bin change metrics
+    """
+    # Create tensors to collect all changes
+    all_pred_changes = predictions[..., 1:, :, :] - predictions[..., :-1, :, :]
+    all_truth_changes = ground_truth[..., 1:, :, :] - ground_truth[..., :-1, :, :]
+    
+    bin_change_metrics = []
+    
+    # For each bin, find changes that match this magnitude
+    for bin_val in bins:
+        # Find pixels where ground truth changed by this bin value
+        bin_mask = (torch.abs(all_truth_changes - bin_val) < 1e-6)
+        
+        if torch.sum(bin_mask) > 0:
+            # Extract predictions and ground truth changes for this bin
+            bin_pred_changes = all_pred_changes[bin_mask]
+            bin_truth_changes = all_truth_changes[bin_mask]
+            
+            # Calculate metrics
+            metrics = calculate_metrics(bin_pred_changes, bin_truth_changes)
+            
+            bin_change_metrics.append({
+                'bin': bin_val,
+                **metrics,
+                'count': torch.sum(bin_mask).item()
+            })
+        else:
+            bin_change_metrics.append({
+                'bin': bin_val,
+                'r2': 0.0,
+                'rmse': 0.0,
+                'mae': 0.0,
+                'me': 0.0,
+                'count': 0
+            })
+    
+    return bin_change_metrics
+
+def evaluate_model(model, test_loader, device, coords_df=None):
+    """Evaluate model and generate all required metrics for yearly data"""
+    model.eval()
+    
+    # Containers for predictions and ground truth
+    all_predictions = []
+    all_ground_truth = []
+    all_location_ids = []
+    
+    print("\nEvaluating model on test set...")
+    with torch.no_grad():
+        for batch in tqdm(test_loader, desc="Testing"):
+            sentinel_data = batch['sentinel'].to(device)
+            ground_truth = batch['ground_truth'].to(device)
+            location_ids = batch['location_id']
+            
+            # Get model predictions
+            predictions = model(sentinel_data)
+            
+            # Store results
             all_predictions.append(predictions.cpu())
             all_ground_truth.append(ground_truth.cpu())
+            all_location_ids.extend(location_ids)
     
-    # Concatenate all predictions and ground truth
+    # Concatenate all batches
     all_predictions = torch.cat(all_predictions, dim=0)
     all_ground_truth = torch.cat(all_ground_truth, dim=0)
     
-    # Calculate final metrics
-    final_metrics = calculate_accuracy_metrics(all_predictions, all_ground_truth)
+    # Identify changing locations
+    changing_locations = identify_changing_locations(all_ground_truth)
+    changing_indices = torch.where(changing_locations)[0].tolist()
     
-    # Save results
+    print(f"Found {changing_locations.sum().item()} locations with significant changes out of {len(changing_locations)}")
+    
+    # Get hemisphere information for each location
+    hemisphere_flags = []
+    for loc_id in all_location_ids:
+        is_northern = is_northern_hemisphere(loc_id, coords_df)
+        hemisphere_flags.append(is_northern)
+    
+    # Save changing location IDs
+    changing_ids = [all_location_ids[i] for i in changing_indices]
+    with open('changing_locations_yearly.json', 'w') as f:
+        json.dump(changing_ids, f)
+    
+    print(f"Saved {len(changing_ids)} changing location IDs to changing_locations_yearly.json")
+    
+    # Extract data for changing locations
+    if torch.sum(changing_locations) > 0:
+        changing_predictions = all_predictions[changing_locations]
+        changing_ground_truth = all_ground_truth[changing_locations]
+    else:
+        changing_predictions = torch.zeros_like(all_predictions[:0])
+        changing_ground_truth = torch.zeros_like(all_ground_truth[:0])
+    
+    # Calculate bins
+    bins = [0.0, 0.25, 0.5, 0.75, 1.0]
+    
+    # Class names for tables
+    class_names = ['Bare', 'Crops', 'Herbaceous', 'Shrubs', 'Trees', 'Urban', 'Water']
+    
+    # ========== Table 1: Overall metrics (all locations) ==========
+    overall_metrics = calculate_metrics(all_predictions, all_ground_truth)
+    overall_change_metrics = calculate_change_metrics(all_predictions, all_ground_truth)
+    
+    # ========== Table 2: Overall metrics (changing locations) ==========
+    if len(changing_predictions) > 0:
+        changing_metrics = calculate_metrics(changing_predictions, changing_ground_truth)
+        changing_change_metrics = calculate_change_metrics(changing_predictions, changing_ground_truth)
+    else:
+        changing_metrics = {metric: 0.0 for metric in overall_metrics}
+        changing_change_metrics = {metric: 0.0 for metric in overall_change_metrics}
+    
+    # ========== Table 3: Per-class metrics (all locations) ==========
+    per_class_metrics = []
+    
+    for c in range(7):  # 7 classes
+        class_metrics = calculate_metrics(all_predictions[:, c], all_ground_truth[:, c])
+        class_change_metrics = calculate_change_metrics(all_predictions[:, c], all_ground_truth[:, c])
+        
+        per_class_metrics.append({
+            'class': class_names[c],
+            **class_metrics,
+            'r2_change': class_change_metrics['r2'],
+            'rmse_change': class_change_metrics['rmse'],
+            'mae_change': class_change_metrics['mae'],
+            'me_change': class_change_metrics['me']
+        })
+    
+    # ========== Table 4: Per-class metrics (changing locations) ==========
+    per_class_changing_metrics = []
+    
+    for c in range(7):
+        if len(changing_predictions) > 0:
+            class_changing_metrics = calculate_metrics(changing_predictions[:, c], changing_ground_truth[:, c])
+            class_changing_change_metrics = calculate_change_metrics(changing_predictions[:, c], changing_ground_truth[:, c])
+        else:
+            class_changing_metrics = {metric: 0.0 for metric in overall_metrics}
+            class_changing_change_metrics = {metric: 0.0 for metric in overall_change_metrics}
+        
+        per_class_changing_metrics.append({
+            'class': class_names[c],
+            **class_changing_metrics,
+            'r2_change': class_changing_change_metrics['r2'],
+            'rmse_change': class_changing_change_metrics['rmse'],
+            'mae_change': class_changing_change_metrics['mae'],
+            'me_change': class_changing_change_metrics['me']
+        })
+    
+    # ========== Table 5: Per-bin metrics (all locations) ==========
+    bin_metrics = calculate_bin_metrics(all_predictions, all_ground_truth, bins)
+    bin_change_metrics = calculate_bin_change_metrics(all_predictions, all_ground_truth, bins)
+    
+    # Combine regular and change metrics for bins
+    bin_combined_metrics = []
+    for i, bin_m in enumerate(bin_metrics):
+        bin_combined_metrics.append({
+            **bin_m,
+            'r2_change': bin_change_metrics[i]['r2'],
+            'rmse_change': bin_change_metrics[i]['rmse'],
+            'mae_change': bin_change_metrics[i]['mae'],
+            'me_change': bin_change_metrics[i]['me'],
+            'count_change': bin_change_metrics[i]['count']
+        })
+    
+    # ========== Table 6: Per-bin metrics (changing locations) ==========
+    if len(changing_predictions) > 0:
+        bin_changing_metrics = calculate_bin_metrics(changing_predictions, changing_ground_truth, bins)
+        bin_changing_change_metrics = calculate_bin_change_metrics(changing_predictions, changing_ground_truth, bins)
+        
+        # Combine regular and change metrics for changing bins
+        bin_changing_combined_metrics = []
+        for i, bin_m in enumerate(bin_changing_metrics):
+            bin_changing_combined_metrics.append({
+                **bin_m,
+                'r2_change': bin_changing_change_metrics[i]['r2'],
+                'rmse_change': bin_changing_change_metrics[i]['rmse'],
+                'mae_change': bin_changing_change_metrics[i]['mae'],
+                'me_change': bin_changing_change_metrics[i]['me'],
+                'count_change': bin_changing_change_metrics[i]['count']
+            })
+    else:
+        bin_changing_combined_metrics = [
+            {'bin': bin_val, 'r2': 0.0, 'rmse': 0.0, 'mae': 0.0, 'me': 0.0, 
+             'r2_change': 0.0, 'rmse_change': 0.0, 'mae_change': 0.0, 'me_change': 0.0, 
+             'count': 0, 'count_change': 0}
+            for bin_val in bins
+        ]
+    
+    # Combine all results
     results = {
-        'overall_metrics': {
-            'r2': final_metrics['overall_r2'],
-            'mae': final_metrics['overall_mae'],
-            'rmse': final_metrics['overall_rmse'],
-            'mean_error': final_metrics['overall_mean_error'],
-            'weighted_bins_accuracy': final_metrics['weighted_bins_accuracy']
+        'overall': {
+            **overall_metrics,
+            'r2_change': overall_change_metrics['r2'],
+            'rmse_change': overall_change_metrics['rmse'],
+            'mae_change': overall_change_metrics['mae'],
+            'me_change': overall_change_metrics['me']
         },
-        'bins_metrics': final_metrics['bins_metrics'],
-        'class_metrics': final_metrics['class_metrics'],
-        'change_detection': {
-            'overall': {
-                'r2': final_metrics['change_r2'],
-                'mae': final_metrics['change_mae'],
-                'rmse': final_metrics['change_rmse'],
-                'mean_error': final_metrics['change_mean_error']
-            },
-            'per_class': final_metrics['class_change_metrics']
+        'changing': {
+            **changing_metrics,
+            'r2_change': changing_change_metrics['r2'],
+            'rmse_change': changing_change_metrics['rmse'],
+            'mae_change': changing_change_metrics['mae'],
+            'me_change': changing_change_metrics['me']
+        },
+        'per_class': per_class_metrics,
+        'per_class_changing': per_class_changing_metrics,
+        'bins': bin_combined_metrics,
+        'bins_changing': bin_changing_combined_metrics,
+        'changing_location_ids': changing_ids,
+        'metadata': {
+            'num_locations': len(all_predictions),
+            'num_changing_locations': len(changing_ids),
+            'hemisphere_info': f"Northern: {hemisphere_flags.count(True)}, Southern: {hemisphere_flags.count(False)}"
         }
     }
     
-    # Save metrics to JSON
-    with open(results_dir / 'test_metrics.json', 'w') as f:
-        json.dump(results, f, indent=4)
-    
-    # Plot metrics
-    plt.figure(figsize=(15, 5))
-    
-    # Plot MAE per class
-    plt.subplot(131)
-    plt.bar(range(7), mae_per_class.cpu())
-    plt.title('MAE per Class')
-    plt.xlabel('Class')
-    plt.ylabel('MAE')
-    
-    # Plot RMSE per class
-    plt.subplot(132)
-    plt.bar(range(7), rmse_per_class.cpu())
-    plt.title('RMSE per Class')
-    plt.xlabel('Class')
-    plt.ylabel('RMSE')
-    
-    # Plot R² scores
-    plt.subplot(133)
-    plt.bar(range(7), r2_scores)
-    plt.title('R² Scores per Class')
-    plt.xlabel('Class')
-    plt.ylabel('R²')
-    
-    plt.tight_layout()
-    plt.savefig(results_dir / 'metrics.png')
-    plt.close()
-    
-    # Print summary
-    print("\nTest Results Summary:")
-    print(f"Overall R²: {results['overall_metrics']['r2']:.4f}")
-    print(f"Overall MAE: {results['overall_metrics']['mae']:.4f}")
-    print(f"Overall RMSE: {results['overall_metrics']['rmse']:.4f}")
-    print(f"Weighted Bins Accuracy: {results['overall_metrics']['weighted_bins_accuracy']:.4f}")
-    
-    print("\nClass-wise Performance:")
-    for i, metrics in enumerate(results['class_metrics']):
-        print(f"\nClass {i}:")
-        print(f"  R²: {metrics['r2']:.4f}")
-        print(f"  MAE: {metrics['mae']:.4f}")
-        print(f"  RMSE: {metrics['rmse']:.4f}")
-    
-    print(f"\nResults saved to: {results_dir}")
     return results
+
+def print_table(table_data, title):
+    """Print a nicely formatted table"""
+    print(f"\n{title}")
+    
+    # Get column widths
+    col_widths = {}
+    for col in table_data.keys():
+        values = table_data[col]
+        col_widths[col] = max(len(str(col)), max(len(str(v)) for v in values))
+    
+    # Print header
+    header = " | ".join(f"{col:<{col_widths[col]}}" for col in table_data.keys())
+    print(header)
+    print("-" * len(header))
+    
+    # Print rows
+    for i in range(len(table_data[list(table_data.keys())[0]])):
+        row = " | ".join(f"{str(table_data[col][i]):<{col_widths[col]}}" for col in table_data.keys())
+        print(row)
+
+def print_all_tables(results):
+    """Print all six required tables"""
+    
+    # Table 1: Overall metrics (all locations)
+    overall_table = {
+        'Model': ['ViT3 yearly_15'],
+        'R²': [f"{results['overall']['r2']:.4f}"],
+        'RMSE': [f"{results['overall']['rmse']:.4f}"],
+        'MAE': [f"{results['overall']['mae']:.4f}"],
+        'ME': [f"{results['overall']['me']:.4e}"],
+        'R² Change': [f"{results['overall']['r2_change']:.4f}"],
+        'RMSE Change': [f"{results['overall']['rmse_change']:.4f}"],
+        'MAE Change': [f"{results['overall']['mae_change']:.4f}"],
+        'ME Change': [f"{results['overall']['me_change']:.4e}"]
+    }
+    print_table(overall_table, "Table 1: Overall model performance metrics")
+    
+    # Table 2: Overall metrics (changing locations)
+    changing_table = {
+        'Model': ['ViT3 yearly_15'],
+        'R²': [f"{results['changing']['r2']:.4f}"],
+        'RMSE': [f"{results['changing']['rmse']:.4f}"],
+        'MAE': [f"{results['changing']['mae']:.4f}"],
+        'ME': [f"{results['changing']['me']:.4e}"],
+        'R² Change': [f"{results['changing']['r2_change']:.4f}"],
+        'RMSE Change': [f"{results['changing']['rmse_change']:.4f}"],
+        'MAE Change': [f"{results['changing']['mae_change']:.4f}"],
+        'ME Change': [f"{results['changing']['me_change']:.4e}"]
+    }
+    print_table(changing_table, "Table 2: Overall model performance metrics for changing locations")
+    
+    # Table 3: Per-class metrics (all locations)
+    per_class_table = {
+        'Class': [m['class'] for m in results['per_class']],
+        'R²': [f"{m['r2']:.4f}" for m in results['per_class']],
+        'RMSE': [f"{m['rmse']:.4f}" for m in results['per_class']],
+        'MAE': [f"{m['mae']:.4f}" for m in results['per_class']],
+        'ME': [f"{m['me']:.4f}" for m in results['per_class']],
+        'R² Change': [f"{m['r2_change']:.4f}" for m in results['per_class']],
+        'RMSE Change': [f"{m['rmse_change']:.4f}" for m in results['per_class']],
+        'MAE Change': [f"{m['mae_change']:.4f}" for m in results['per_class']],
+        'ME Change': [f"{m['me_change']:.4f}" for m in results['per_class']]
+    }
+    print_table(per_class_table, "Table 3: Per-class metrics and per-class change metrics")
+    
+    # Table 4: Per-class metrics (changing locations)
+    per_class_changing_table = {
+        'Class': [m['class'] for m in results['per_class_changing']],
+        'R²': [f"{m['r2']:.4f}" for m in results['per_class_changing']],
+        'RMSE': [f"{m['rmse']:.4f}" for m in results['per_class_changing']],
+        'MAE': [f"{m['mae']:.4f}" for m in results['per_class_changing']],
+        'ME': [f"{m['me']:.4f}" for m in results['per_class_changing']],
+        'R² Change': [f"{m['r2_change']:.4f}" for m in results['per_class_changing']],
+        'RMSE Change': [f"{m['rmse_change']:.4f}" for m in results['per_class_changing']],
+        'MAE Change': [f"{m['mae_change']:.4f}" for m in results['per_class_changing']],
+        'ME Change': [f"{m['me_change']:.4f}" for m in results['per_class_changing']]
+    }
+    print_table(per_class_changing_table, "Table 4: Per-class metrics and per-class change metrics for changing locations")
+    
+    # Table 5: Per-bin metrics (all locations)
+    bin_table = {
+        'Bin': [f"{m['bin']:.2f}" for m in results['bins']],
+        'RMSE': [f"{m['rmse']:.4f}" for m in results['bins']],
+        'MAE': [f"{m['mae']:.4f}" for m in results['bins']],
+        'ME': [f"{m['me']:.4f}" for m in results['bins']],
+        'Count': [f"{m['count']}" for m in results['bins']],
+        'RMSE Change': [f"{m['rmse_change']:.4f}" for m in results['bins']],
+        'MAE Change': [f"{m['mae_change']:.4f}" for m in results['bins']],
+        'ME Change': [f"{m['me_change']:.4f}" for m in results['bins']],
+        'Count Change': [f"{m['count_change']}" for m in results['bins']]
+    }
+    print_table(bin_table, "Table 5: Per-bin metrics and per-bin change metrics")
+    
+    # Table 6: Per-bin metrics (changing locations)
+    bin_changing_table = {
+        'Bin': [f"{m['bin']:.2f}" for m in results['bins_changing']],
+        'RMSE': [f"{m['rmse']:.4f}" for m in results['bins_changing']],
+        'MAE': [f"{m['mae']:.4f}" for m in results['bins_changing']],
+        'ME': [f"{m['me']:.4f}" for m in results['bins_changing']],
+        'Count': [f"{m['count']}" for m in results['bins_changing']],
+        'RMSE Change': [f"{m['rmse_change']:.4f}" for m in results['bins_changing']],
+        'MAE Change': [f"{m['mae_change']:.4f}" for m in results['bins_changing']],
+        'ME Change': [f"{m['me_change']:.4f}" for m in results['bins_changing']],
+        'Count Change': [f"{m['count_change']}" for m in results['bins_changing']]
+    }
+    print_table(bin_changing_table, "Table 6: Per-bin metrics and per-bin change metrics for changing locations")
 
 def main():
     # Set device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Using device: {device}")
     
-    # Create test dataloader
+    # Load coordinates data for hemisphere determination
+    try:
+        #coords_path = "/mnt/guanabana/raid/hdd1/qinxu/Python/Data/Raw/validation_africa.csv"
+        coords_path = "/lustre/scratch/WUR/ESG/xu116/validation_africa.csv"
+        coords_df = pd.read_csv(coords_path)
+        print(f"Loaded coordinates for {len(coords_df)} locations")
+    except Exception as e:
+        print(f"Warning: Could not load coordinates file: {e}")
+        print("Will use Northern hemisphere as default for all locations")
+        coords_df = None
+    
+    # Create model - make sure to use the yearly model
+    model = create_model()
+    
+    # Load checkpoint - update this path to your yearly model checkpoint
+    #checkpoint_path = "/mnt/guanabana/raid/hdd1/qinxu/Python/LCF-ViT/training/yearly_15_best_model.pth"
+    checkpoint_path = "/lustre/scratch/WUR/ESG/xu116/LCF-ViT_new/training/vit_yearly_15_results_20250226_161216/checkpoint_epoch_21.pth"
+    checkpoint = torch.load(checkpoint_path, map_location=device)
+    
+    # Load state dict
+    state_dict = checkpoint['model_state_dict']
+    new_state_dict = {}
+    for k, v in state_dict.items():
+        name = k[7:] if k.startswith('module.') else k  # remove 'module.' prefix
+        new_state_dict[name] = v
+    
+    model.load_state_dict(new_state_dict)
+    print(f"\nLoaded model from epoch {checkpoint['epoch']}")
+    
+    # Move model to device
+    model = model.to(device)
+    
+    # Create test dataloader with yearly data
     test_loader = create_yearly_15_dataloader(
-        base_path="/mnt/guanabana/raid/shared/dropbox/QinLennart",
+        base_path="/lustre/scratch/WUR/ESG/xu116",
+        #base_path = "/mnt/guanabana/raid/shared/dropbox/QinLennart",
         split="Test_set",
-        batch_size=32
+        batch_size=32,
+        num_workers=4
     )
     
-    # Model checkpoint path
-    model_path = "vit_test_results_20250211_225631/best_model.pth"  # Using the best model checkpoint
+    # Evaluate model
+    results = evaluate_model(model, test_loader, device, coords_df)
     
-    # Run test
-    results = test_model(model_path, test_loader, device)
+    # Print all tables
+    print_all_tables(results)
+    
+    # Save detailed results as JSON
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    results_path = Path(f"vit_yearly_15_testing_results_{timestamp}.json")
+    
+    with open(results_path, 'w') as f:
+        json.dump(results, f, indent=2)
+    
+    print(f"\nDetailed results saved to: {results_path}")
+    print(f"Changing location IDs saved to: changing_locations_yearly.json")
 
 if __name__ == "__main__":
     main()
