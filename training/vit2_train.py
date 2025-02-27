@@ -83,8 +83,8 @@ class ViTTrainer:
         model,
         train_loader,
         val_loader=None,
-        learning_rate=5e-5,
-        weight_decay=1e-2,
+        learning_rate=1e-4, #5e-5,
+        weight_decay=1e-4, #1e-2,
         device='cuda',
         num_epochs=50,
         criterion=None,
@@ -221,7 +221,7 @@ class ViTTrainer:
             noise = torch.randn_like(sentinel_data) * 0.005
             sentinel_data = sentinel_data + noise
             
-            self.optimizer.zero_grad(set_to_none=True)
+            self.optimizer.zero_grad(set_to_none=True) # More memory efficient than zero_grad()
             
             with torch.cuda.amp.autocast():
                 predictions = self.model(sentinel_data)

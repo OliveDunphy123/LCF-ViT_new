@@ -15,171 +15,72 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from models.vit_model1_monthly_15 import create_model
 from data.my_whole_dataset import create_monthly_15_dataloader
 
-# def calculate_accuracy_metrics(predictions, ground_truth):
-#     """
-#     Calculate accuracy metrics accounting for monthly predictions and yearly ground truth.
-#     Args:
-#         predictions: shape [B, 7, 42, 5, 5]
-#         ground_truth: shape [B, 7, 42, 5, 5]
-#     """
-#     if predictions.device != ground_truth.device:
-#         ground_truth = ground_truth.to(predictions.device)
-#     # Now both tensors have same shape, we can calculate metrics directly
-#     mae_per_class = torch.mean(torch.abs(predictions - ground_truth), dim=(0,2,3,4))
-#     rmse_per_class = torch.sqrt(torch.mean((predictions - ground_truth)**2, dim=(0,2,3,4)))
-    
-#     # Calculate overall metrics across all classes and dimensions
-#     overall_mae = torch.mean(torch.abs(predictions - ground_truth))
-#     overall_rmse = torch.sqrt(torch.mean((predictions - ground_truth)**2))
-
-#     # Calculate accuracy
-#     tolerance = 0.05
-#     correct_predictions = torch.abs(predictions - ground_truth) <= tolerance
-#     total_elements = correct_predictions.numel()
-    
-#     if total_elements == 0:
-#         overall_accuracy = torch.tensor(0.0, device=predictions.device)
-#     else:
-#         overall_accuracy = correct_predictions.float().sum() / total_elements
-    
-#     # Calculate per-class R² scores
-#     r2_scores = []
-#     for class_idx in range(7):
-#         y_true = ground_truth[:,class_idx].flatten()
-#         y_pred = predictions[:,class_idx].flatten()
-
-#         ss_tot = torch.sum((y_true - torch.mean(y_true))**2)
-#         ss_res = torch.sum((y_true - y_pred)**2)
-
-
-#         # Handle zero division case
-#         if ss_tot == 0:
-#             r2 = torch.tensor(0.0, device=predictions.device)
-#         else:
-#             r2 = 1 - (ss_res / ss_tot)
-
-#         r2_scores.append(r2.item())
-
-#     # Calculate overall R² score
-#     y_true_all = ground_truth.flatten()
-#     y_pred_all = predictions.flatten()
-    
-#     ss_tot_all = torch.sum((y_true_all - torch.mean(y_true_all))**2)
-#     ss_res_all = torch.sum((y_true_all - y_pred_all)**2)
-    
-#     overall_r2 = torch.tensor(0.0, device=predictions.device)
-#     if ss_tot_all != 0:
-#         overall_r2 = 1 - (ss_res_all / ss_tot_all)
-    
-#     return {
-#         'mae_per_class': mae_per_class,
-#         'rmse_per_class': rmse_per_class,
-#         'overall_accuracy': overall_accuracy,
-#         'r2_scores': r2_scores,
-#         'overall_mae': overall_mae,
-#         'overall_rmse': overall_rmse,
-#         'overall_r2': overall_r2.item()
-#     }
 def calculate_accuracy_metrics(predictions, ground_truth):
     """
-    Calculate comprehensive accuracy metrics for land cover fraction predictions
-    
+    Calculate accuracy metrics accounting for monthly predictions and yearly ground truth.
     Args:
-        predictions: tensor of shape [B, 7, T, 5, 5] 
-        ground_truth: tensor of shape [B, 7, T, 5, 5]
-        
-    Returns:
-        Dictionary containing various accuracy metrics
+        predictions: shape [B, 7, 42, 5, 5]
+        ground_truth: shape [B, 7, 42, 5, 5]
     """
-    # Ensure tensors are on the same device
     if predictions.device != ground_truth.device:
         ground_truth = ground_truth.to(predictions.device)
+    # Now both tensors have same shape, we can calculate metrics directly
+    mae_per_class = torch.mean(torch.abs(predictions - ground_truth), dim=(0,2,3,4))
+    rmse_per_class = torch.sqrt(torch.mean((predictions - ground_truth)**2, dim=(0,2,3,4)))
+    
+    # Calculate overall metrics across all classes and dimensions
+    overall_mae = torch.mean(torch.abs(predictions - ground_truth))
+    overall_rmse = torch.sqrt(torch.mean((predictions - ground_truth)**2))
 
-    # Flatten predictions and ground truth for overall metrics
-    pred_flat = predictions.flatten()
-    truth_flat = ground_truth.flatten()
-    
-    # Overall R² calculation with improved numerical stability
-    truth_mean = torch.mean(truth_flat)
-    ss_tot = torch.sum((truth_flat - truth_mean)**2)
-    ss_res = torch.sum((truth_flat - pred_flat)**2)
-    ss_reg = torch.sum((pred_flat - truth_mean)**2)
-    overall_r2 = ss_reg / (ss_tot + 1e-8)
-    
-    # Overall MAE and RMSE
-    overall_mae = torch.mean(torch.abs(pred_flat - truth_flat))
-    overall_rmse = torch.sqrt(torch.mean((pred_flat - truth_flat)**2))
-    
-    # Normalized RMSE
-    value_range = torch.max(truth_flat) - torch.min(truth_flat)
-    normalized_rmse = overall_rmse / value_range if value_range != 0 else 0.0
-    
-    # Mean Bias Error
-    mean_bias = torch.mean(pred_flat - truth_flat)
-    
-    # Reshape tensors for per-class metrics [N, 7] where N = B * T * 5 * 5
-    pred_reshaped = predictions.permute(0, 2, 3, 4, 1).reshape(-1, 7)
-    truth_reshaped = ground_truth.permute(0, 2, 3, 4, 1).reshape(-1, 7)
-    
-    # MAE and RMSE per class
-    mae_per_class = torch.mean(torch.abs(pred_reshaped - truth_reshaped), dim=0)
-    rmse_per_class = torch.sqrt(torch.mean((pred_reshaped - truth_reshaped)**2, dim=0))
-    
-    # Accuracy with tolerance
-    tolerance = 0.1  # 5% tolerance
+    # Calculate accuracy
+    tolerance = 0.05
     correct_predictions = torch.abs(predictions - ground_truth) <= tolerance
-    overall_accuracy = torch.mean(correct_predictions.float())
+    total_elements = correct_predictions.numel()
     
-    # R² score and correlation for each class
+    if total_elements == 0:
+        overall_accuracy = torch.tensor(0.0, device=predictions.device)
+    else:
+        overall_accuracy = correct_predictions.float().sum() / total_elements
+    
+    # Calculate per-class R² scores
     r2_scores = []
-    correlations = []
-    
     for class_idx in range(7):
-        y_true = truth_reshaped[:, class_idx]
-        y_pred = pred_reshaped[:, class_idx]
-        
-        # R² calculation
-        y_mean = torch.mean(y_true)
-        ss_tot = torch.sum((y_true - y_mean)**2)
+        y_true = ground_truth[:,class_idx].flatten()
+        y_pred = predictions[:,class_idx].flatten()
+
+        ss_tot = torch.sum((y_true - torch.mean(y_true))**2)
         ss_res = torch.sum((y_true - y_pred)**2)
-        ss_reg = torch.sum((y_pred - y_mean)**2)
-        
-        if ss_tot == 0:  # Handle edge case
-            r2 = 1.0 if torch.allclose(y_true, y_pred) else 0.0
+
+
+        # Handle zero division case
+        if ss_tot == 0:
+            r2 = torch.tensor(0.0, device=predictions.device)
         else:
-            r2 = ss_reg / (ss_tot + 1e-8)
-        
-        r2_scores.append(float(r2))
-        
-        # Correlation calculation
-        try:
-            corr_matrix = torch.corrcoef(torch.stack([y_true, y_pred]))
-            correlation = corr_matrix[0, 1]
-        except:
-            correlation = torch.tensor(float('nan'))
-        correlations.append(float(correlation))
+            r2 = 1 - (ss_res / ss_tot)
+
+        r2_scores.append(r2.item())
+
+    # Calculate overall R² score
+    y_true_all = ground_truth.flatten()
+    y_pred_all = predictions.flatten()
     
-    # Fraction sum constraint validation
-    fraction_sum = torch.sum(predictions, dim=1)  # Sum across classes
-    fraction_error = torch.abs(fraction_sum - 1.0)
-    fraction_constraint = torch.mean(fraction_error)
+    ss_tot_all = torch.sum((y_true_all - torch.mean(y_true_all))**2)
+    ss_res_all = torch.sum((y_true_all - y_pred_all)**2)
     
-    # Compile all metrics
-    metrics = {
-        'overall_accuracy': float(overall_accuracy),
-        'overall_r2': float(overall_r2),
-        'overall_mae': float(overall_mae),
-        'overall_rmse': float(overall_rmse),
-        'normalized_rmse': float(normalized_rmse),
-        'mean_bias_error': float(mean_bias),
+    overall_r2 = torch.tensor(0.0, device=predictions.device)
+    if ss_tot_all != 0:
+        overall_r2 = 1 - (ss_res_all / ss_tot_all)
+    
+    return {
         'mae_per_class': mae_per_class,
         'rmse_per_class': rmse_per_class,
+        'overall_accuracy': overall_accuracy,
         'r2_scores': r2_scores,
-        'correlations_per_class': correlations,
-        'fraction_constraint_error': float(fraction_constraint)
+        'overall_mae': overall_mae,
+        'overall_rmse': overall_rmse,
+        'overall_r2': overall_r2.item()
     }
-    
-    return metrics
+
 
 class ViTTrainer:
     def __init__(
@@ -187,8 +88,8 @@ class ViTTrainer:
         model,
         train_loader,
         val_loader=None,
-        learning_rate=5e-5, #1e-4 before
-        weight_decay=1e-2,
+        learning_rate=1e-4, #5e-5, #1e-4 before
+        weight_decay=1e-4, #1e-2,
         device='cuda',
         num_epochs=50,
         criterion=None,
