@@ -524,7 +524,7 @@ def main():
     model = create_model()
     
     # Load checkpoint - update this path to your yearly model checkpoint
-    #checkpoint_path = "/mnt/guanabana/raid/hdd1/qinxu/Python/LCF-ViT/training/yearly_15_best_model.pth"
+    #checkpoint_path = "/mnt/guanabana/raid/hdd1/qinxu/Python/LCF-ViT/training/yearly_15_checkpoint_epoch_21.pth"
     checkpoint_path = "/lustre/scratch/WUR/ESG/xu116/LCF-ViT_new/training/vit_yearly_15_results_20250226_161216/checkpoint_epoch_21.pth"
     checkpoint = torch.load(checkpoint_path, map_location=device)
     
