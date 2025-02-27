@@ -275,8 +275,8 @@ class SentinelViT(nn.Module):
             nn.GELU(),
             nn.Dropout(0.1),
             nn.Linear(256, 7 * 25),  # 7 fractions * (5x5) spatial output
-            Lambda(lambda x: x.view(-1, 7, 5, 5)),  # [B, 7, 5, 5]
-            Lambda(lambda x: torch.softmax(x, dim=1))  # Ensures fractions sum to 1 at each pixel
+            #Lambda(lambda x: x.view(-1, 7, 5, 5)),  # [B, 7, 5, 5]
+            #Lambda(lambda x: torch.softmax(x, dim=1))  # Ensures fractions sum to 1 at each pixel
         )
 
         # Initialize weights
@@ -441,12 +441,13 @@ class SentinelViT(nn.Module):
             output = self.regression_head(features) # [B, 7*5*5]
             # print(f"Output shape: {output.shape}")
             output = output.reshape(B, 7, 5, 5) # reshape to [B,7,5,5]
+            output = F.softmax(output, dim=1)
 
             # Add verification
             if self.training:  # only check during training to save computation
                 # Check if fractions sum to 1 for each pixel
                 sums = output.sum(dim=1)  # Sum over fraction dimension
-                if not torch.allclose(sums, torch.ones_like(sums), rtol=1e-3):
+                if not torch.allclose(sums, torch.ones_like(sums), rtol=1e-5):
                     print(f"Warning: Fractions don't sum to 1. Range: [{sums.min():.3f}, {sums.max():.3f}]")
                     
             temporal_outputs.append(output)
