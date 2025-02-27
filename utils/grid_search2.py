@@ -118,7 +118,7 @@ def run_grid_search():
 
         try:
             # Create data loaders
-            train_loader = create_monthy_5_dataloader(
+            train_loader = create_monthly_5_dataloader(
                 base_path="/lustre/scratch/WUR/ESG/xu116",
                 split="Training",
                 batch_size=params['batch_size']
