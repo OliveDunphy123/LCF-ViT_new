@@ -106,6 +106,12 @@ def run_grid_search():
     param_values = [param_grid[name] for name in param_names]
     combinations = list(itertools.product(*param_values))
 
+    # Delete existing checkpoint to force starting over
+    checkpoint_path = Path("grid_search3_checkpoint")
+    if checkpoint_path.exists():
+        checkpoint_path.unlink()
+        print("Deleted existing checkpoint to start fresh.")
+
     # Create results directory
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     results_dir = Path(f"grid_search1_results_{timestamp}")
@@ -113,37 +119,17 @@ def run_grid_search():
     
     # Create directory for model checkpoints
     (results_dir / 'model_checkpoints').mkdir(exist_ok=True)
+    results = []
+    start_idx = 0
+    best_accuracy = 0.0
+    best_config = None
     
-    # Calculate new storage requirements
-    num_combinations = len(combinations)
-    approx_size_per_model = 384  # Approximate size in MB for one model
-    total_size_gb = (num_combinations * approx_size_per_model) / 1024  # Convert to GB
-    
-    print(f"\nGrid Search Information:")
-    print(f"Number of combinations to test: {num_combinations}")
-    print(f"Using 1/2 of training data and 1/2 of validation data")
-    print(f"Epochs per configuration: 15")
-    print(f"Approximate storage required: {total_size_gb:.1f} GB")
-    estimated_time_per_config = 20  # minutes
-    total_estimated_time = num_combinations * estimated_time_per_config
-    print(f"Estimated total time: {total_estimated_time//60} hours {total_estimated_time%60} minutes")
-    # user_input = input("Do you want to continue? (y/n): ")
-    
-    # if user_input.lower() != 'y':
-    #     print("Grid search cancelled by user")
-    #     return
-
     # Save parameter grid
     with open(results_dir / 'param_grid.json', 'w') as f:
         json.dump(param_grid, f, indent=4)
 
     # Create TensorBoard writer
     writer = SummaryWriter(results_dir / 'tensorboard')
-
-    # Track best configuration
-    best_accuracy = 0.0
-    best_config = None
-    results = []
 
     # Run grid search
     for i, combination in enumerate(combinations):
@@ -234,12 +220,31 @@ def run_grid_search():
                     sentinel_data = batch['sentinel'].to(trainer.device)
                     ground_truth = batch['ground_truth']
                     predictions = model(sentinel_data)
-                    val_predictions.append(predictions.cpu())
+
+                    # Ensure predictions are the correct shape and have undergone softmax
+                    if len(predictions.shape) == 5:  # [B, 7, T, 5, 5]
+                        # Already processed, just move to CPU
+                        val_predictions.append(predictions.cpu())
+                    else:
+                        # Unexpected format, log and handle
+                        print(f"Warning: Unexpected prediction shape: {predictions.shape}")
+                        continue
+                        
                     val_ground_truth.append(ground_truth)
 
-            val_predictions = torch.cat(val_predictions)
-            val_ground_truth = torch.cat(val_ground_truth)
-            metrics = calculate_accuracy_metrics(val_predictions, val_ground_truth)
+            if len(val_predictions) > 0:
+                val_predictions = torch.cat(val_predictions)
+                val_ground_truth = torch.cat(val_ground_truth)
+                metrics = calculate_accuracy_metrics(val_predictions, val_ground_truth)
+            else:
+                print("Error: No valid predictions were generated")
+                continue
+            #         val_predictions.append(predictions.cpu())
+            #         val_ground_truth.append(ground_truth)
+
+            # val_predictions = torch.cat(val_predictions)
+            # val_ground_truth = torch.cat(val_ground_truth)
+            # metrics = calculate_accuracy_metrics(val_predictions, val_ground_truth)
 
             # Save model weights and results
             config_id = f"lr{params['learning_rate']}_wd{params['weight_decay']}_bs{params['batch_size']}_{params['loss_function']['name']}_{params['scheduler_type']}"
@@ -265,9 +270,33 @@ def run_grid_search():
             # Log to TensorBoard
             writer.add_scalar('GridSearch/accuracy', metrics['overall_accuracy'], i)
             writer.add_scalar('GridSearch/mae_avg', sum(metrics['mae_per_class'])/7, i)
+            writer.add_scalar('GridSearch/overall_r2', metrics['overall_r2'], i)
+            writer.add_scalar('GridSearch/overall_rmse', metrics['overall_rmse'], i)
+
+            # Save checkpoint
+            checkpoint = {
+                'results_dir': str(results_dir),
+                'completed_configs': list(range(i + 1)),
+                'results': results,
+                'best_accuracy': best_accuracy,
+                'best_config': best_config
+            }
+            torch.save(checkpoint, checkpoint_path)
             
         except Exception as e:
             print(f"Error with combination {i+1}: {str(e)}")
+            import traceback
+            traceback.print_exc()  # Print full traceback for debugging
+            
+            # Save checkpoint even if there's an error
+            checkpoint = {
+                'results_dir': str(results_dir),
+                'completed_configs': list(range(i)),  # Note: i instead of i+1
+                'results': results,
+                'best_accuracy': best_accuracy,
+                'best_config': best_config
+            }
+            torch.save(checkpoint, checkpoint_path)
             continue
 
     writer.close()
@@ -277,12 +306,12 @@ def run_grid_search():
         f.write("Grid Search Comparison Report\n")
         f.write("==========================\n\n")
         f.write(f"Total configurations tested: {len(combinations)}\n")
-        f.write("Using 1/3 training data and 1/3 validation data, 15 epochs each\n\n")
+        f.write("Using 1/2 training data and 1/2 validation data, 15 epochs each\n\n")
         
-        # Sort results by multiple metrics
+        # Sort results by accuracy and MAE
         sorted_results = sorted(results, 
                               key=lambda x: (
-                                  sum(x['metrics']['overall_accuracy'])/7,  # Average R2
+                                  x['metrics']['overall_accuracy'],  # Overall accuracy
                                   -sum(x['metrics']['mae_per_class'])/7  # Average MAE (negative because lower is better)
                               ), 
                               reverse=True)
@@ -303,6 +332,12 @@ def run_grid_search():
             # Metrics
             metrics = result['metrics']
             
+            # Overall metrics
+            f.write(f"Overall Accuracy: {metrics['overall_accuracy']:.4f}\n")
+            f.write(f"Overall R²: {metrics['overall_r2']:.4f}\n")
+            f.write(f"Overall MAE: {metrics['overall_mae']:.4f}\n")
+            f.write(f"Overall RMSE: {metrics['overall_rmse']:.4f}\n\n")
+            
             # R2 scores for each class
             f.write("R² Scores:\n")
             for i, r2 in enumerate(metrics['r2_scores']):
@@ -320,10 +355,7 @@ def run_grid_search():
                 f.write("RMSE per class:\n")
                 for i, rmse in enumerate(metrics['rmse_per_class']):
                     f.write(f"  Class {i+1}: {rmse:.4f}\n")
-                f.write(f"  Average RMSE: {sum(metrics['rmse_per_class'])/7:.4f}\n")
-            
-            # Overall accuracy
-            f.write(f"\nOverall Accuracy: {metrics['overall_accuracy']:.4f}\n")
+                f.write(f"  Average RMSE: {sum(metrics['rmse_per_class'])/7:.4f}\n\n")
             
             # Model file reference
             config_id = f"lr{params['learning_rate']}_wd{params['weight_decay']}_bs{params['batch_size']}_{params['loss_function']['name']}_{params['scheduler_type']}"
@@ -334,6 +366,10 @@ def run_grid_search():
     print("\nGrid Search completed!")
     print(f"Results saved in: {results_dir}")
     print("Check 'comparison_report.txt' for detailed results of all configurations")
+
+    # Remove checkpoint after successful completion
+    if checkpoint_path.exists():
+        checkpoint_path.unlink()
 
 if __name__ == "__main__":
     run_grid_search()
