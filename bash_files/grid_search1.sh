@@ -6,7 +6,7 @@
 #SBATCH --mem=32000M
 #SBATCH --time=72:00:00
 
-# Load CUDA modules
+# Load CUDA moduless
 module load GPU
 module load CUDA/11.8.0
 module load cuDNN/8.7.0.84-CUDA-11.8.0
@@ -47,4 +47,4 @@ if torch.cuda.is_available():
 "
 
 # Run your script
-python "grid_search3.py"
+python "grid_search1.py"
