@@ -519,7 +519,7 @@ def print_all_tables(results):
     
     # Table 1: Overall metrics (all locations)
     overall_table = {
-        'Model': ['ViT1 monthly_15'],
+        'Model': ['ViT2 monthly_5'],
         'R²': [f"{results['overall']['r2']:.4f}"],
         'RMSE': [f"{results['overall']['rmse']:.4f}"],
         'MAE': [f"{results['overall']['mae']:.4f}"],
@@ -533,7 +533,7 @@ def print_all_tables(results):
     
     # Table 2: Overall metrics (changing locations)
     changing_table = {
-        'Model': ['ViT1 monthly_15'],
+        'Model': ['ViT2 monthly_5'],
         'R²': [f"{results['changing']['r2']:.4f}"],
         'RMSE': [f"{results['changing']['rmse']:.4f}"],
         'MAE': [f"{results['changing']['mae']:.4f}"],
