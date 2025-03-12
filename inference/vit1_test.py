@@ -608,8 +608,8 @@ def main():
     
     # Load coordinates data for hemisphere determination
     try:
-        #coords_path = "/mnt/guanabana/raid/hdd1/qinxu/Python/Data/Raw/validation_africa.csv"
-        coords_path = "/lustre/scratch/WUR/ESG/xu116/validation_africa.csv"
+        coords_path = "/mnt/guanabana/raid/hdd1/qinxu/Python/Data/Raw/validation_africa.csv"
+        #coords_path = "/lustre/scratch/WUR/ESG/xu116/validation_africa.csv"
         coords_df = pd.read_csv(coords_path)
         print(f"Loaded coordinates for {len(coords_df)} locations")
     except Exception as e:
@@ -622,7 +622,7 @@ def main():
     
     # Load checkpoint
     checkpoint_path = "/mnt/guanabana/raid/hdd1/qinxu/Python/LCF-ViT/training/monthly_15_checkpoint_epoch_23.pth"
-    checkpoint_path = "/lustre/scratch/WUR/ESG/xu116/LCF-ViT_new/training/vit_monthly_15_results_20250227_063916/checkpoint_epoch_23.pth"
+    #checkpoint_path = "/lustre/scratch/WUR/ESG/xu116/LCF-ViT_new/training/vit_monthly_15_results_20250227_063916/checkpoint_epoch_23.pth"
     checkpoint = torch.load(checkpoint_path, map_location=device)
     
     # Load state dict
@@ -640,8 +640,8 @@ def main():
     
     # Create test dataloader
     test_loader = create_monthly_15_dataloader(
-        base_path="/lustre/scratch/WUR/ESG/xu116",
-        #base_path = "/mnt/guanabana/raid/shared/dropbox/QinLennart",
+        #base_path="/lustre/scratch/WUR/ESG/xu116",
+        base_path = "/mnt/guanabana/raid/shared/dropbox/QinLennart",
         split="Test_set",
         batch_size=32,
         num_workers=4

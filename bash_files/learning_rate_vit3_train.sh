@@ -24,8 +24,6 @@ micromamba activate land_cover_fraction
 # Add your project root to PYTHONPATH
 export PYTHONPATH="/lustre/scratch/WUR/ESG/xu116/LCF-ViT_new:$PYTHONPATH"
 
-
-
 cd /lustre/scratch/WUR/ESG/xu116/LCF-ViT_new/training
 
 # Print debug information to confirm environment
